@@ -2,7 +2,7 @@
 
 namespace necs
 {
-	size_t Archetype::append(Entity entity)
+	size_t Archetype::append(const Entity entity)
 	{
 		const size_t row = entity_count++;
 		if (row >= entities.size())

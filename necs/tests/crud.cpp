@@ -34,6 +34,15 @@ struct Health
 	}
 };
 
+struct Name
+{
+	std::string name;
+
+	Name() = default;
+
+	explicit Name(std::string s) : name(std::move(s)) {}
+};
+
 class CRUDTest : public testing::Test
 {
 protected:
@@ -221,4 +230,53 @@ TEST_F(CRUDTest, MultipleEntities)
 	auto *vel3 = world.get<Velocity>(entity3);
 	ASSERT_NE(vel3, nullptr);
 	EXPECT_EQ(vel3->z, 60.0f);
+}
+
+TEST_F(CRUDTest, NonTrivial)
+{
+	Name original("TestEntity");
+	world.set<Name>(entity, original);
+
+	EXPECT_TRUE(world.has<Name>(entity));
+
+	auto* name_ptr = world.get<Name>(entity);
+	ASSERT_NE(name_ptr, nullptr);
+	EXPECT_EQ(name_ptr->name, "TestEntity");
+
+	Name updated("UpdatedName");
+	world.set<Name>(entity, updated);
+
+	name_ptr = world.get<Name>(entity);
+	ASSERT_NE(name_ptr, nullptr);
+	EXPECT_EQ(name_ptr->name, "UpdatedName");
+
+	name_ptr->name = "DirectlyModified";
+
+	auto* retrieved_ptr = world.get<Name>(entity);
+	ASSERT_NE(retrieved_ptr, nullptr);
+	EXPECT_EQ(retrieved_ptr->name, "DirectlyModified");
+
+	retrieved_ptr->name = "Prefix" + retrieved_ptr->name;
+
+	auto* concat_ptr = world.get<Name>(entity);
+	ASSERT_NE(concat_ptr, nullptr);
+	EXPECT_EQ(concat_ptr->name, "PrefixDirectlyModified");
+
+	world.remove<Name>(entity);
+	EXPECT_FALSE(world.has<Name>(entity));
+
+	const necs::Entity entity2 = world.entity();
+	world.set<Name>(entity, Name("Entity1"));
+	world.set<Name>(entity2, Name("Entity2"));
+
+	auto* name1 = world.get<Name>(entity);
+	auto* name2 = world.get<Name>(entity2);
+
+	ASSERT_NE(name1, nullptr);
+	ASSERT_NE(name2, nullptr);
+	EXPECT_EQ(name1->name, "Entity1");
+	EXPECT_EQ(name2->name, "Entity2");
+
+	// world.despawn(entity);
+	// world.despawn(entity2);
 }

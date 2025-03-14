@@ -7,13 +7,27 @@ namespace necs
 	constexpr uint64_t GENERATION_SHIFT = 48; /* we need to shift 16 bits upper to accommodate the entity bits */
 	constexpr Generation MAX_GENERATION = 0xFFFF; /* for 16-bit generation */
 
-	World::World() : alive_count(0), next_eid(0), next_cid(0), root_archetype(create_archetype({})) {}
+	World::World() : root_archetype(create_archetype({})), alive_count(0), next_eid(0), next_cid(0) {}
 
 	World::~World()
 	{
-		for (auto& [hash, cache_ptr] : qcaches)
-			free(cache_ptr);
+		for (auto& [hash, cache_entry] : qcaches)
+		{
+			auto& [ptr, del] = cache_entry;
+			del(ptr);
+		}
 		qcaches.clear();
+
+		for (auto& [hash, archetype] : archetypes)
+		{
+			for (auto& [c, edge] : archetype->add_edge)
+				delete edge;
+			for (auto& [c, edge] : archetype->remove_edge)
+				delete edge;
+
+			delete archetype;
+		}
+		archetypes.clear();
 	}
 
 	Entity World::entity()
@@ -59,7 +73,7 @@ namespace necs
 			it == generations.end() || it->second != gen)
 			return;
 
-		/* Remove all components */
+		/* remove all components */
 		if (const auto record_it = entity_records.find(entity_id);
 			record_it != entity_records.end())
 		{

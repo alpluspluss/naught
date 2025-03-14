@@ -96,8 +96,8 @@ namespace necs
 		/* archetype management */
 		std::unordered_map<uint64_t, Archetype *> archetypes;
 		std::unordered_map<Entity, Record> entity_records;
-		std::unordered_map<Component, void(*)(void *)> cdtors; /* stores component destructor */
-		std::unordered_map<uint64_t, void *> qcaches;          /* type-erased query caches */
+		std::unordered_map<Component, void(*)(void *)> cdtors;                     /* stores component destructor */
+		std::unordered_map<uint64_t, std::pair<void *, void(*)(void *)> > qcaches; /* type-erased query caches */
 
 		std::unordered_map<Entity, Generation> generations; /* a sparse set to track decoded entity's id */
 		/* maps entity ids to their index poses in the entity pools */
@@ -305,9 +305,11 @@ namespace necs
 		const uint64_t qhash = archash(cids);
 
 		auto cache_it = qcaches.find(qhash);
+		QueryCache<Components...> *cache = nullptr;
+
 		if (cache_it != qcaches.end())
 		{
-			auto *cache = static_cast<QueryCache<Components...> *>(cache_it->second);
+			cache = static_cast<QueryCache<Components...> *>(cache_it->second.first);
 			if (cache->archetype && cache->entity_count == cache->archetype->entity_count &&
 			    !has_flag(cache->archetype->flags, DirtyFlags::ADDED | DirtyFlags::REMOVED | DirtyFlags::UPDATED))
 			{
@@ -373,12 +375,20 @@ namespace necs
 				}
 			}
 		}
+		else
+		{
+			// Create a new cache and immediately store it in the map with its deleter
+			cache = new QueryCache<Components...>();
+			qcaches[qhash] = {
+				cache,
+				[](void *ptr)
+				{
+					delete static_cast<QueryCache<Components...> *>(ptr);
+				}
+			};
+		}
 
-		/* create or rebuild the cache */
-		auto *cache = cache_it != qcaches.end()
-			              ? static_cast<QueryCache<Components...> *>(cache_it->second)
-			              : new QueryCache<Components...>();
-
+		/* clear existing results if this is a cache rebuild */
 		cache->result.clear();
 
 		/* populate the query */
@@ -414,10 +424,6 @@ namespace necs
 				));
 			}
 		}
-
-		/* store new cache */
-		if (cache_it == qcaches.end())
-			qcaches[qhash] = cache;
 
 		return cache->result;
 	}

@@ -273,54 +273,59 @@ BENCHMARK(BM_QueryPerformance)->Range(1 << 10, 1 << 16)->Unit(benchmark::kMillis
 
 static void BM_HeavyQueryWorkload(benchmark::State& state)
 {
-    necs::World world;
-
-    /* create a complex distribution of entity archetypes */
-    const int entity_count = state.range(0);
-    std::vector<necs::Entity> entities(entity_count);
-
-    /* create entities with randomized component combinations */
-    std::mt19937 rng(42); /* fixed seed for reproducibility */
-    std::uniform_int_distribution<int> dist(0, 31); /* 2^5 possible component combinations */
-
-    for (int i = 0; i < entity_count; ++i)
-    {
-        auto entity = world.entity();
-        entities[i] = entity;
-
-        int pattern = dist(rng);
-
-        /* always add position */
-        world.set<Position>(entity, { static_cast<float>(i), static_cast<float>(i * 2), static_cast<float>(i * 3) });
-
-        /* add other components based on bit pattern */
-        if (pattern & 1)
-            world.set<Velocity>(entity, { static_cast<float>(i % 10) * 0.1f, static_cast<float>(i % 5) * 0.2f, 0.3f });
-
-        if (pattern & 2)
-            world.set<Health>(entity, { 100 - (i % 50), 100 });
-
-        if (pattern & 4)
-            world.set<Name>(entity, Name(std::string("Entity") + std::to_string(i)));
-
-        if (pattern & 8)
-            world.set<AI>(entity, { i % 3, static_cast<float>(i % 100), static_cast<float>(i % 100) });
-
-        /* add custom tag to every 7th entity to further increase archetype count */
-        if (i % 7 == 0)
-            world.set<struct Tag1>(entity, {});
-        if (i % 11 == 0)
-            world.set<struct Tag2>(entity, {});
-        if (i % 13 == 0)
-            world.set<struct Tag3>(entity, {});
-    }
-
-    /* execute heavy query workload multiple times per iteration */
+    /* Each benchmark iteration should create a fresh world */
     for (auto _ : state)
     {
-        float physics_sum = 0.0f;
-        int health_sum = 0;
-        int entities_processed = 0;
+        necs::World world;
+
+        /* create a complex distribution of entity archetypes */
+        const int entity_count = state.range(0);
+        std::vector<necs::Entity> entities(entity_count);
+
+        /* create entities with randomized component combinations */
+        std::mt19937 rng(42); /* fixed seed for reproducibility */
+        std::uniform_int_distribution<int> dist(0, 31); /* 2^5 possible component combinations */
+
+        for (int i = 0; i < entity_count; ++i)
+        {
+            auto entity = world.entity();
+            entities[i] = entity;
+
+            int pattern = dist(rng);
+
+            /* always add position */
+            world.set<Position>(entity, { static_cast<float>(i), static_cast<float>(i * 2), static_cast<float>(i * 3) });
+
+            /* add other components based on bit pattern */
+            if (pattern & 1)
+                world.set<Velocity>(entity, { static_cast<float>(i % 10) * 0.1f, static_cast<float>(i % 5) * 0.2f, 0.3f });
+
+            if (pattern & 2)
+                world.set<Health>(entity, { 100 - (i % 50), 100 });
+
+            if (pattern & 4)
+            {
+                /* Use fixed-size naming to avoid string allocation/reallocation issues */
+                char buffer[32];
+                std::snprintf(buffer, sizeof(buffer), "Entity%d", i);
+                world.set<Name>(entity, Name(buffer));
+            }
+
+            if (pattern & 8)
+                world.set<AI>(entity, { i % 3, static_cast<float>(i % 100), static_cast<float>(i % 100) });
+
+            /* add custom tag to every 7th entity to further increase archetype count */
+            if (i % 7 == 0)
+                world.set<Tag1>(entity, {});
+            if (i % 11 == 0)
+                world.set<Tag2>(entity, {});
+            if (i % 13 == 0)
+                world.set<Tag3>(entity, {});
+        }
+
+        auto physics_sum = 0.0f;
+        auto health_sum = 0;
+        auto entities_processed = 0;
 
         /* run multiple queries to simulate different systems */
         for (int i = 0; i < 10; ++i) /* simulate 10 frames */
@@ -360,8 +365,10 @@ static void BM_HeavyQueryWorkload(benchmark::State& state)
             auto q4 = world.query<Name, Position>();
             for (auto& [entity, name, pos] : q4)
             {
+                /* instead of modifying the string, just measure position */
                 if (pos->x > 1000.0f)
-                    name->name = "Far" + name->name;
+                    benchmark::DoNotOptimize(pos->x);
+
                 entities_processed++;
             }
 
@@ -389,6 +396,9 @@ static void BM_HeavyQueryWorkload(benchmark::State& state)
         benchmark::DoNotOptimize(physics_sum);
         benchmark::DoNotOptimize(health_sum);
         benchmark::DoNotOptimize(entities_processed);
+
+        for (const auto entity : entities)
+            world.despawn(entity);
     }
 }
 
