@@ -1,3 +1,5 @@
+/* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
+
 #include <random>
 #include <string>
 #include <benchmark/benchmark.h>
@@ -273,7 +275,7 @@ BENCHMARK(BM_QueryPerformance)->Range(1 << 10, 1 << 16)->Unit(benchmark::kMillis
 
 static void BM_HeavyQueryWorkload(benchmark::State& state)
 {
-    /* Each benchmark iteration should create a fresh world */
+    /* each benchmark iteration should create a fresh world */
     for (auto _ : state)
     {
         necs::World world;
@@ -283,8 +285,8 @@ static void BM_HeavyQueryWorkload(benchmark::State& state)
         std::vector<necs::Entity> entities(entity_count);
 
         /* create entities with randomized component combinations */
-        std::mt19937 rng(42); /* fixed seed for reproducibility */
-        std::uniform_int_distribution<int> dist(0, 31); /* 2^5 possible component combinations */
+        std::mt19937 rng(42);
+        std::uniform_int_distribution dist(0, 31); /* 2^5 possible component combinations */
 
         for (int i = 0; i < entity_count; ++i)
         {

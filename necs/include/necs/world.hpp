@@ -377,7 +377,6 @@ namespace necs
 		}
 		else
 		{
-			// Create a new cache and immediately store it in the map with its deleter
 			cache = new QueryCache<Components...>();
 			qcaches[qhash] = {
 				cache,
@@ -389,12 +388,12 @@ namespace necs
 		}
 
 		/* clear existing results if this is a cache rebuild */
-		cache->result.clear();
+		std::vector<std::tuple<Entity, Components *...>>().swap(cache->result);
 
 		/* populate the query */
 		for (const auto &[hash, arch]: archetypes)
 		{
-			bool valid = true;
+			auto valid = true;
 			for (const Component cid: cids)
 			{
 				if (!arch->has(cid))

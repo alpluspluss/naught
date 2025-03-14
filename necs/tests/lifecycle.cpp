@@ -1,3 +1,5 @@
+/* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
+
 #include <unordered_set>
 #include <gtest/gtest.h>
 #include <necs/world.hpp>
