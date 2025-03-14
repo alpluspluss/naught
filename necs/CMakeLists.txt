@@ -9,7 +9,7 @@ add_library(necs
 )
 
 target_include_directories(necs PRIVATE
-        include
+        ${PROJECT_SOURCE_DIR}/necs/include
 )
 
 # tests
@@ -63,7 +63,7 @@ if (NECS_BUILD_BENCHES)
     )
 
     target_include_directories(necsbm PRIVATE
-            include
+            ${PROJECT_SOURCE_DIR}/necs/include
     )
 
     target_link_libraries(necsbm PRIVATE

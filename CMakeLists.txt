@@ -12,6 +12,7 @@ option(NAUGHT_BUILD_TESTS "Naught Build Tests" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 
+add_subdirectory(naught)
 add_subdirectory(necs)
 
 # test status message
