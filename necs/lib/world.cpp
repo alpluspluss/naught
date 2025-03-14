@@ -7,9 +7,13 @@ namespace necs
 	constexpr uint64_t GENERATION_SHIFT = 48; /* we need to shift 16 bits upper to accommodate the entity bits */
 	constexpr Generation MAX_GENERATION = 0xFFFF; /* for 16-bit generation */
 
-	World::World() : alive_count(0), next_eid(0), next_cid(0)
+	World::World() : alive_count(0), next_eid(0), next_cid(0), root_archetype(create_archetype({})) {}
+
+	World::~World()
 	{
-		root_archetype = create_archetype({});
+		for (auto& [hash, cache_ptr] : qcaches)
+			free(cache_ptr);
+		qcaches.clear();
 	}
 
 	Entity World::entity()
@@ -113,8 +117,6 @@ namespace necs
 		return static_cast<Generation>(entity >> GENERATION_SHIFT);
 	}
 
-	World::~World() = default;
-
 	Archetype *World::create_archetype(const std::vector<Component> &components)
 	{
 		std::vector<Component> sorted_components = components;
@@ -150,7 +152,7 @@ namespace necs
 			return source;
 
 		std::vector<Component> new_components = source->components;
-		new_components.push_back(component);
+		new_components.emplace_back(component);
 		Archetype *target = find_archetype(new_components);
 		if (!target)
 			target = create_archetype(new_components);
@@ -178,7 +180,7 @@ namespace necs
 		return nullptr;
 	}
 
-	Archetype *World::find_archetype_without(Archetype *source, Component component)
+	Archetype *World::find_archetype_without(Archetype *source, const Component component)
 	{
 		if (const auto edge_it = source->remove_edge.find(component);
 			edge_it != source->remove_edge.end() && edge_it->second->to != nullptr)
@@ -193,7 +195,7 @@ namespace necs
 		for (Component c: source->components)
 		{
 			if (c != component)
-				new_components.push_back(c);
+				new_components.emplace_back(c);
 		}
 
 		Archetype *target = find_archetype(new_components);
@@ -210,7 +212,7 @@ namespace necs
 		return target;
 	}
 
-	void World::move_entity(Entity entity, Record &record, Archetype *destination)
+	void World::move_entity(const Entity entity, Record &record, Archetype *destination)
 	{
 		const uint64_t entity_id = get_eid(entity);
 		Archetype *source = record.archetype;

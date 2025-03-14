@@ -24,7 +24,7 @@ namespace necs
 		return std::ranges::find(components, c) != components.end();
 	}
 
-	void Archetype::remove(Entity entity)
+	void Archetype::remove(const Entity entity)
 	{
 		/* entity here is expected to be raw id */
 		const auto it = entity_rows.find(entity);

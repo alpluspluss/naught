@@ -17,5 +17,4 @@ message("-- Naught ECS Build Tests: ${NECS_BUILD_TESTS}")
 message("-- Naught Build Tests: ${NAUGHT_BUILD_TESTS}")
 
 # bench status message
-message("-- Naught Build Benches: ${NECS_BUILD_BENCHES}")
-message("\n") # EoL
+message("-- Naught ECS Build Benches: ${NECS_BUILD_BENCHES}")

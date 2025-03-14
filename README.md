@@ -2,7 +2,7 @@ Naught
 ====
 
 **Naught** is a low-level game engine that provides fine-grained control with integrated ECS and graphics
-interface (uh probably in the future). 
+interface (uh probably in the future).
 
 <br/>
 

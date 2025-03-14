@@ -5,6 +5,7 @@
 #include <vector>
 #include <necs/archetypes.hpp>
 #include <necs/types.hpp>
+#include <necs/utils.hpp>
 
 namespace necs
 {
@@ -53,6 +54,14 @@ namespace necs
 		void move_entity(Entity entity, Record &record, Archetype *destination);
 
 	private:
+		template<typename... Components>
+		struct QueryCache
+		{
+			Archetype *archetype = nullptr; /* strong pointer to the archetype */
+			size_t entity_count = 0;        /* entity count at the time of caching */
+			std::vector<std::tuple<Entity, Components *...> > result;
+		};
+
 		template<typename T>
 		Component get_cid()
 		{
@@ -88,6 +97,7 @@ namespace necs
 		std::unordered_map<uint64_t, Archetype *> archetypes;
 		std::unordered_map<Entity, Record> entity_records;
 		std::unordered_map<Component, void(*)(void *)> cdtors; /* stores component destructor */
+		std::unordered_map<uint64_t, void *> qcaches;          /* type-erased query caches */
 
 		std::unordered_map<Entity, Generation> generations; /* a sparse set to track decoded entity's id */
 		/* maps entity ids to their index poses in the entity pools */
@@ -289,16 +299,93 @@ namespace necs
 	}
 
 	template<typename... Components>
-		std::vector<std::tuple<Entity, Components *...> > World::query()
+	std::vector<std::tuple<Entity, Components *...> > World::query()
 	{
-		std::vector<std::tuple<Entity, Components *...> > res;
+		const std::vector<Component> cids = { get_cid<Components>()... };
+		const uint64_t qhash = archash(cids);
 
-		/* get component id for all requested component types */
-		const std::vector<Component> component_ids = { get_cid<Components>()... };
+		auto cache_it = qcaches.find(qhash);
+		if (cache_it != qcaches.end())
+		{
+			auto *cache = static_cast<QueryCache<Components...> *>(cache_it->second);
+			if (cache->archetype && cache->entity_count == cache->archetype->entity_count &&
+			    !has_flag(cache->archetype->flags, DirtyFlags::ADDED | DirtyFlags::REMOVED | DirtyFlags::UPDATED))
+			{
+				return cache->result;
+			}
+
+			if (cache->archetype)
+			{
+				if (has_flag(cache->archetype->flags, DirtyFlags::ADDED) &&
+				    !has_flag(cache->archetype->flags, DirtyFlags::REMOVED | DirtyFlags::UPDATED))
+				{
+					/* append the new entities */
+					for (size_t i = cache->entity_count; i < cache->archetype->entity_count; ++i)
+					{
+						Entity entity_id = cache->archetype->entities[i];
+						const auto gen_it = generations.find(entity_id);
+						if (gen_it == generations.end())
+							continue;
+
+						Entity encoded_entity = encode_entity(entity_id, gen_it->second);
+						cache->result.emplace_back(std::make_tuple(
+							encoded_entity,
+							get_component_ptr<Components>(cache->archetype, i)...
+						));
+					}
+					cache->entity_count = cache->archetype->entity_count;
+					cache->archetype->flags = static_cast<DirtyFlags>(
+						static_cast<uint64_t>(cache->archetype->flags) &
+						~static_cast<uint64_t>(DirtyFlags::ADDED) /* reset the flag */
+					);
+					return cache->result;
+				}
+
+				if (has_flag(cache->archetype->flags, DirtyFlags::REMOVED) &&
+				    !has_flag(cache->archetype->flags, DirtyFlags::ADDED | DirtyFlags::UPDATED))
+				{
+					/* filter out non-existent entities; entities were removed */
+					auto &result = cache->result;
+					result.erase(
+						std::remove_if(result.begin(), result.end(),
+						               [this, cache](const auto &tuple)
+						               {
+							               Entity encoded_entity = std::get<0>(tuple);
+							               uint64_t entity_id = get_eid(encoded_entity);
+							               return cache->archetype->entity_rows.find(entity_id) == cache->archetype->
+							                      entity_rows.end();
+						               }),
+						result.end()
+					);
+					cache->entity_count = cache->archetype->entity_count;
+					cache->archetype->flags = static_cast<DirtyFlags>(
+						static_cast<uint64_t>(cache->archetype->flags) &
+						~static_cast<uint64_t>(DirtyFlags::REMOVED) /* reset the flag */
+					);
+					return cache->result;
+				}
+				if (has_flag(cache->archetype->flags, DirtyFlags::UPDATED))
+				{
+					cache->archetype->flags = static_cast<DirtyFlags>(
+						static_cast<uint64_t>(cache->archetype->flags) &
+						~static_cast<uint64_t>(DirtyFlags::UPDATED)
+					);
+				}
+			}
+		}
+
+		/* create or rebuild the cache */
+		auto *cache = cache_it != qcaches.end()
+			              ? static_cast<QueryCache<Components...> *>(cache_it->second)
+			              : new QueryCache<Components...>();
+
+		cache->result.clear();
+
+		/* populate the query */
 		for (const auto &[hash, arch]: archetypes)
 		{
-			auto valid = true;
-			for (const Component cid: component_ids)
+			bool valid = true;
+			for (const Component cid: cids)
 			{
 				if (!arch->has(cid))
 				{
@@ -310,22 +397,28 @@ namespace necs
 			if (!valid)
 				continue;
 
+			/* patch & cache the result */
+			cache->archetype = arch;
+			cache->entity_count = arch->entity_count;
 			for (size_t i = 0; i < arch->entity_count; ++i)
 			{
 				Entity entity_id = arch->entities[i];
-
 				const auto gen_it = generations.find(entity_id);
 				if (gen_it == generations.end())
 					continue;
 
 				Entity encoded_entity = encode_entity(entity_id, gen_it->second);
-				res.emplace_back(std::make_tuple(
+				cache->result.emplace_back(std::make_tuple(
 					encoded_entity,
 					get_component_ptr<Components>(arch, i)...
 				));
 			}
 		}
 
-		return res;
+		/* store new cache */
+		if (cache_it == qcaches.end())
+			qcaches[qhash] = cache;
+
+		return cache->result;
 	}
 }

@@ -53,7 +53,6 @@ if (NECS_BUILD_TESTS)
     )
 endif ()
 
-# benches
 if (NECS_BUILD_BENCHES)
     find_package(benchmark REQUIRED)
 
@@ -69,6 +68,14 @@ if (NECS_BUILD_BENCHES)
             necs
             benchmark::benchmark
     )
+
+    if(Gperftools_FOUND)
+        target_link_libraries(necsbm PRIVATE ${GPERFTOOLS_PROFILER_LIBRARY})
+        message(STATUS "Gperftools found, enabling profiling support")
+    else()
+        target_link_libraries(necsbm PRIVATE profiler)
+        message(STATUS "Using direct profiler linking")
+    endif()
 
     set(BENCHMARKS_FLAGS
             "-O3"
