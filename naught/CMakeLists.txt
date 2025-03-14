@@ -8,6 +8,7 @@ if (APPLE)
     list(APPEND NAUGHT_SOURCE
             lib/os/macos/window.mm
             lib/os/macos/app.mm
+            lib/os/macos/view.mm
     )
 endif ()
 
@@ -24,6 +25,8 @@ if (APPLE)
         target_link_libraries(naught PRIVATE
                 "-framework AppKit"
                 "-framework Cocoa"
+                "-framework Metal"
+                "-framework QuartzCore"
         )
 endif ()
 

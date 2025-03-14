@@ -5,10 +5,12 @@
 #include <string>
 #include <functional>
 #include <memory>
-#include "naught/types.hpp"
+#include <naught/types.hpp>
 
 namespace nght
 {
+    class View;
+
     class NaughtWindow
     {
     public:
@@ -38,6 +40,11 @@ namespace nght
 
         NaughtWindow& operator=(NaughtWindow&&) noexcept = default;
 
+        /* render view layer */
+        View* view() const;
+
+        View* create_view();
+
         /* transform methods */
         [[nodiscard]] Vec2 size() const;
 
@@ -56,6 +63,7 @@ namespace nght
     private:
         struct Impl;
         std::unique_ptr<Impl> pimpl;
+
     };
 
     /* bitwise for style enum */

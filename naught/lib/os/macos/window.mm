@@ -6,38 +6,61 @@
 #include <objc/objc.h>
 #include <naught/types.hpp>
 #include <naught/window.hpp>
+#include <naught/view.hpp>
 #include <AppKit/AppKit.h>
 #include <Foundation/Foundation.h>
 
+extern "C" 
+{
+    void nght_window_handle_close(void* window_ptr);
+    void nght_window_handle_resize(void* window_ptr);
+}
+
 @interface NaughtWindowDelegate : NSObject<NSWindowDelegate>
 {
-    nght::NaughtWindow* nwindow; /* naught window */
-    
+    void* nwindow_ptr; /* naught window pointer */
 }
 @end
 
 @implementation NaughtWindowDelegate
 
-- (instancetype)initWithWindow:(nght::NaughtWindow*)window
+- (instancetype)initWithWindow:(void*)window
 {
     if (self = [super init])
-        nwindow = window;
+        nwindow_ptr = window;
     return self;
 }
 
 - (BOOL)windowShouldClose:(NSWindow *)sender
 {
-    if (nwindow->on_close)
-        nwindow->on_close();
+    nght_window_handle_close(nwindow_ptr);
     return YES;
 }
 
 - (void)windowDidResize:(NSNotification *)notification
 {
-    if (nwindow->on_resize)
-        nwindow->on_resize();
+    nght_window_handle_resize(nwindow_ptr);
 }
 @end
+
+// C-style callbacks that Objective-C can call
+void nght_window_handle_close(void* window_ptr)
+{
+    auto* window = static_cast<nght::NaughtWindow*>(window_ptr);
+    if (window->on_close)
+        window->on_close();
+}
+
+void nght_window_handle_resize(void* window_ptr)
+{
+    auto* window = static_cast<nght::NaughtWindow*>(window_ptr);
+    if (window->on_resize)
+        window->on_resize();
+        
+    // Also notify view if it exists
+    if (window->view() && window->view()->on_resize)
+        window->view()->on_resize(window->size());
+}
 
 namespace nght
 {
@@ -45,6 +68,7 @@ namespace nght
     {
         NSWindow* window;
         NaughtWindowDelegate* delegate = {};
+        std::unique_ptr<View> view_ptr;
 
         Impl(const std::string& name, Style style, const Rect& bounds)
         {
@@ -85,9 +109,9 @@ namespace nght
                 [NSApp setMainMenu:menu_bar];
 
                 id app_menu = [NSMenu new];
-                id app_name = [ [NSProcessInfo processInfo] processName];
+                id app_name = [[NSProcessInfo processInfo] processName];
                 id quit_tt = [@"Quit" stringByAppendingString:app_name];
-                id quit_mn_item = [ [NSMenuItem alloc] initWithTitle:quit_tt 
+                id quit_mn_item = [[NSMenuItem alloc] initWithTitle:quit_tt 
                                     action:@selector(terminate:) keyEquivalent:@"q"];
 
                 [app_menu addItem:quit_mn_item];
@@ -97,6 +121,8 @@ namespace nght
 
         ~Impl()
         {
+            view_ptr.reset();
+            
             if (window)
             {
                 [window setDelegate:nil];
@@ -130,6 +156,19 @@ namespace nght
     {
         return pimpl->window;
     }
+    
+    View* NaughtWindow::view() const
+    {
+        return pimpl->view_ptr.get();
+    }
+    
+    View* NaughtWindow::create_view()
+    {
+        if (!pimpl->view_ptr)
+            pimpl->view_ptr = std::make_unique<View>(native_handle());
+        
+        return pimpl->view_ptr.get();
+    }
 
     Vec2 NaughtWindow::size() const
     {
@@ -162,7 +201,7 @@ namespace nght
     void NaughtWindow::position(const Vec2& p)
     {
         NSRect frame = [pimpl->window frame];
-        NSRect screen = [ [NSScreen mainScreen] frame];
+        NSRect screen = [[NSScreen mainScreen] frame];
 
         frame.origin.x = p.first;
         frame.origin.y = screen.size.height - p.second - frame.size.height;

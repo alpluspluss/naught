@@ -21,7 +21,7 @@ namespace necs
 		return row;
 	}
 
-	bool Archetype::has(Component c) const
+	bool Archetype::has(const Component c) const
 	{
 		return std::ranges::find(components, c) != components.end();
 	}

@@ -12,6 +12,11 @@ target_include_directories(necs PRIVATE
         ${PROJECT_SOURCE_DIR}/necs/include
 )
 
+target_compile_options(necs PRIVATE
+        "-O3"
+        "-march=native"
+)
+
 # tests
 if (NECS_BUILD_TESTS)
     find_package(GTest REQUIRED)
@@ -58,9 +63,30 @@ endif ()
 if (NECS_BUILD_BENCHES)
     find_package(benchmark REQUIRED)
 
-    add_executable(necsbm
-            benches/bench.cpp
+    set(BENCHMARKS_FLAGS
+            "-O3"
+            "-march=native"
+            "-fno-omit-frame-pointer"
     )
+
+    # unoptimized bench
+    add_executable(necsbm_noop benches/nooptimize.cpp)
+
+    target_include_directories(necsbm_noop PRIVATE
+            ${PROJECT_SOURCE_DIR}/necs/include
+    )
+
+    target_link_libraries(necsbm_noop PRIVATE
+            necs
+            benchmark::benchmark
+    )
+
+    target_compile_options(necsbm_noop PRIVATE
+            ${BENCHMARKS_FLAGS}
+    )
+
+    # optimized bench
+    add_executable(necsbm benches/optimize.cpp)
 
     target_include_directories(necsbm PRIVATE
             ${PROJECT_SOURCE_DIR}/necs/include
@@ -69,20 +95,6 @@ if (NECS_BUILD_BENCHES)
     target_link_libraries(necsbm PRIVATE
             necs
             benchmark::benchmark
-    )
-
-    if(Gperftools_FOUND)
-        target_link_libraries(necsbm PRIVATE ${GPERFTOOLS_PROFILER_LIBRARY})
-        message(STATUS "Gperftools found, enabling profiling support")
-    else()
-        target_link_libraries(necsbm PRIVATE profiler)
-        message(STATUS "Using direct profiler linking")
-    endif()
-
-    set(BENCHMARKS_FLAGS
-            "-O3"
-            "-march=native"
-            "-fno-omit-frame-pointer"
     )
 
     target_compile_options(necsbm PRIVATE
