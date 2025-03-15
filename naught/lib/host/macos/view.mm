@@ -5,10 +5,10 @@
 #include <objc/NSObject.h>
 #include <objc/objc.h>
 #include <stdexcept>
-#include <naught/view.hpp>
 #include <AppKit/AppKit.h>
 #include <Metal/Metal.h>
 #include <QuartzCore/CAMetalLayer.h>
+#include <naught/host/view.hpp>
 
 @interface NaughtMetalView : NSView
 @end

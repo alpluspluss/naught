@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <naught/types.hpp>
+#include <naught/host/input.hpp>
 
 namespace nght
 {
@@ -44,6 +45,11 @@ namespace nght
         View* view() const;
 
         View* create_view();
+
+        /* input thingy idk */
+        Input* input() const;
+
+        Input* create_input();
 
         /* transform methods */
         [[nodiscard]] Vec2 size() const;

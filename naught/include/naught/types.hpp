@@ -8,6 +8,6 @@
 namespace nght
 {
     using Point = uint32_t;
-    using Rect = std::pair<uint32_t, uint32_t>;
-    using Vec2 = std::pair<uint32_t, uint32_t>;
+    using Rect = std::pair<float, float>;
+    using Vec2 = std::pair<float, float>;
 }

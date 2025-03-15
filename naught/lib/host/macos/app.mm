@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <AppKit/AppKit.h>
-#include <naught/app.hpp>
+#include <naught/host/app.hpp>
 
 namespace nght
 {

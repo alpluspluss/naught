@@ -1,14 +1,14 @@
 # this file is a part of Naught Engine which is under MIT license; see LICENSE for more info
 
 # naught lib
-
 set(NAUGHT_SOURCE)
 
 if (APPLE)
     list(APPEND NAUGHT_SOURCE
-            lib/os/macos/window.mm
-            lib/os/macos/app.mm
-            lib/os/macos/view.mm
+            lib/host/macos/window.mm
+            lib/host/macos/app.mm
+            lib/host/macos/view.mm
+            lib/host/macos/input.mm
     )
 endif ()
 
@@ -22,12 +22,12 @@ target_include_directories(naught PRIVATE
 )
 
 if (APPLE)
-        target_link_libraries(naught PRIVATE
-                "-framework AppKit"
-                "-framework Cocoa"
-                "-framework Metal"
-                "-framework QuartzCore"
-        )
+    target_link_libraries(naught PRIVATE
+            "-framework AppKit"
+            "-framework Cocoa"
+            "-framework Metal"
+            "-framework QuartzCore"
+    )
 endif ()
 
 
