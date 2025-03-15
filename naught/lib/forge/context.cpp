@@ -230,6 +230,7 @@ namespace nght::frg
 		std::vector<const char *> extensions;
 		if (has_flag(flags, ContextFlags::PRESENTATION))
 			dev_extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		dev_extensions.emplace_back("VK_KHR_portability_subset");
 
 		/* create instance */
 		VkApplicationInfo app_info {};
@@ -247,7 +248,7 @@ namespace nght::frg
 
 		extensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
 		extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-		/* extensions.emplace_back("VK_EXT_metal_surface"); */
+		extensions.emplace_back("VK_EXT_metal_surface");
 		if (enable_validation)
 			extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
@@ -275,9 +276,7 @@ namespace nght::frg
 
 		/* pick physical device */
 		if (!pick_device())
-		{
 			return false;
-		}
 
 		/* create logical device */
 		if (!create_device())
@@ -316,10 +315,15 @@ namespace nght::frg
 		vkEnumeratePhysicalDevices(inst, &device_count, nullptr);
 
 		if (device_count == 0)
+		{
+			std::cerr << "No Vulkan devices found" << std::endl;
 			return false;
+		}
 
 		std::vector<VkPhysicalDevice> devices(device_count);
 		vkEnumeratePhysicalDevices(inst, &device_count, devices.data());
+
+		std::cerr << "Found " << device_count << " physical devices" << std::endl;
 
 		/* find a suitable device; preferring discrete GPUs because perf */
 		int64_t best_score = -1;
@@ -332,6 +336,8 @@ namespace nght::frg
 			vkGetPhysicalDeviceProperties(device, &device_props);
 			vkGetPhysicalDeviceFeatures(device, &device_features);
 
+			std::cerr << "Evaluating device: " << device_props.deviceName << std::endl;
+
 			/* calculate score; a simple algorithm for getting the best fit */
 			uint32_t score = 0;
 			if (device_props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
@@ -340,9 +346,19 @@ namespace nght::frg
 			/* add score based on max texture size */
 			score += device_props.limits.maxImageDimension2D / 1024;
 
-			/* check for required features */
+			/* check for required features - make geometryShader optional on macOS */
+#ifdef __APPLE__
 			if (!device_features.geometryShader)
-				continue;
+			{
+				std::cerr << "  - Warning: No geometry shader support" << std::endl;
+			}
+#else
+        if (!device_features.geometryShader)
+        {
+            std::cerr << "  - Skipping: No geometry shader support" << std::endl;
+            continue;
+        }
+#endif
 
 			/* check for required queue families */
 			uint32_t queue_family_count = 0;
@@ -368,13 +384,17 @@ namespace nght::frg
 			}
 
 			/* skip devices that don't support the required queue families */
+			auto skip = false;
 			if (has_flag(flags, ContextFlags::GRAPHICS) && !has_graphics)
-				continue;
+				skip = true;
 
 			if (has_flag(flags, ContextFlags::COMPUTE) && !has_compute)
-				continue;
+				skip = true;
 
 			if (has_flag(flags, ContextFlags::TRANSFER) && !has_transfer)
+				skip = true;
+
+			if (skip)
 				continue;
 
 			if (score > best_score) /* best fit */
@@ -386,7 +406,10 @@ namespace nght::frg
 			}
 		}
 
-		return phys_device != VK_NULL_HANDLE;
+		if (phys_device == VK_NULL_HANDLE)
+			return false;
+
+		return true;
 	}
 
 	bool Context::create_device()
