@@ -3,18 +3,26 @@
 #include <iostream>
 #include <naught/forge/buffer.hpp>
 #include <naught/forge/context.hpp>
-#include <naught/forge/surface.hpp>
 #include <naught/forge/ib.hpp>
-#include <naught/forge/vb.hpp>
+#include <naught/forge/surface.hpp>
 #include <naught/forge/swapchain.hpp>
+#include <naught/forge/ub.hpp>
+#include <naught/forge/vb.hpp>
 #include <naught/host/app.hpp>
 #include <naught/host/input.hpp>
 #include <naught/host/window.hpp>
 
 struct Vertex
 {
-    float position[3];  // 3D position (x, y, z)
-    float color[3];     // RGB color
+    float position[3];
+    float color[3];
+};
+
+struct MVP /* ubuf test */
+{
+    alignas(16) float model[16];
+    alignas(16) float view[16];
+    alignas(16) float projection[16];
 };
 
 int main()
@@ -100,9 +108,9 @@ int main()
         std::cout << "GPU buffer created: " << gpu_buffer.handle() << std::endl;
 
         constexpr Vertex triangle_verts[] = {
-            {{ 0.0f,  0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-            {{-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-            {{ 0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+            { { 0.0f,  0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+            { {-0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+            { { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
         };
 
         constexpr VkDeviceSize vertex_buffer_size = sizeof(triangle_verts);
@@ -132,6 +140,25 @@ int main()
         index_buffer.set_count(6); /* 6 / 3 = 2 triangles */
         std::cout << "IndexBuf created: " << index_buffer.handle() << std::endl;
         std::cout << "IndexBuf count: " << index_buffer.count() << std::endl;
+
+        constexpr VkDeviceSize ubo_size = sizeof(MVP);
+        nght::frg::UniformBuf uniform_buffer(context, ubo_size);
+
+        std::cout << "ubuf created: " << uniform_buffer.handle() << std::endl;
+        std::cout << "req size: " << ubo_size << " bytes" << std::endl;
+        std::cout << "actual size (aligned): " << uniform_buffer.size() << " bytes" << std::endl;
+        std::cout << "alignment requirement: " << uniform_buffer.get_alignment() << " bytes" << std::endl;
+
+        MVP mvp = {};
+        for (auto i = 0; i < 3; i++)
+        {
+            for (auto j = 0; j < 16; j++)
+            {
+                float* matrix = (i == 0) ? mvp.model : (i == 1) ? mvp.view : mvp.projection;
+                matrix[j] = (j % 5 == 0) ? 1.0f : 0.0f; /* diagonal */
+            }
+        }
+        uniform_buffer.update(mvp);
 
         window->on_resize = [&swapchain, window]()
         {
@@ -171,7 +198,7 @@ int main()
         nght::App::get().stop();
     };
 
-    std::cout << "Press ESC to exit\n";
+    std::cout << "press ESC to exit\n";
 
     app.run();
     return 0;

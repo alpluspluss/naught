@@ -2,4 +2,23 @@
 
 #include <naught/forge/ub.hpp>
 
-/* leave blank for now; this file is here in case there is a need for a non-templated method */
+namespace nght::frg
+{
+	VkDeviceSize UniformBuf::get_alignment() const
+	{
+		return alignment;
+	}
+
+	VkDeviceSize UniformBuf::get_min_uniform_alignment(const Context &ctx)
+	{
+		VkPhysicalDeviceProperties props;
+		vkGetPhysicalDeviceProperties(ctx.physical_device(), &props);
+		return props.limits.minUniformBufferOffsetAlignment;
+	}
+
+	VkDeviceSize UniformBuf::align_uniform_buffer_size(const Context &ctx, VkDeviceSize size)
+	{
+		const VkDeviceSize alignment = get_min_uniform_alignment(ctx);
+		return (size + alignment - 1) & ~(alignment - 1);
+	}
+}
