@@ -58,20 +58,33 @@ namespace nght::frg
 
 	Context::~Context()
 	{
+		/* need to wait because the GPU side may not finish writing to the resource yet */
+		if (dev != VK_NULL_HANDLE)
+			vkDeviceWaitIdle(dev);
+
+		/* then clear up the resources; NOTE: this needs to be in order */
+		if (alloc != VK_NULL_HANDLE)
+		{
+			vmaDestroyAllocator(alloc);
+			alloc = VK_NULL_HANDLE;
+		}
+
 		if (dev != VK_NULL_HANDLE)
 		{
-			vkDeviceWaitIdle(dev);
 			vkDestroyDevice(dev, nullptr);
+			dev = VK_NULL_HANDLE;
 		}
 
 		if (debug_messenger != VK_NULL_HANDLE)
 		{
 			destroy_debug_utils_messenger(inst, debug_messenger, nullptr);
+			debug_messenger = VK_NULL_HANDLE;
 		}
 
 		if (inst != VK_NULL_HANDLE)
 		{
 			vkDestroyInstance(inst, nullptr);
+			inst = VK_NULL_HANDLE;
 		}
 	}
 
@@ -79,6 +92,7 @@ namespace nght::frg
 	                                             debug_messenger(other.debug_messenger),
 	                                             phys_device(other.phys_device),
 	                                             dev(other.dev),
+												 alloc(other.alloc),
 	                                             graphics_queue(other.graphics_queue),
 	                                             prsnt_queue(other.prsnt_queue),
 	                                             trsnf_queue(other.trsnf_queue),
@@ -99,6 +113,7 @@ namespace nght::frg
 		other.debug_messenger = VK_NULL_HANDLE;
 		other.phys_device = VK_NULL_HANDLE;
 		other.dev = VK_NULL_HANDLE;
+		other.alloc = VK_NULL_HANDLE;
 		other.graphics_queue = VK_NULL_HANDLE;
 		other.prsnt_queue = VK_NULL_HANDLE;
 		other.trsnf_queue = VK_NULL_HANDLE;
@@ -213,6 +228,11 @@ namespace nght::frg
 		return enable_validation;
 	}
 
+	VmaAllocator Context::allocator() const
+	{
+		return alloc;
+	}
+
 	VkSampleCountFlagBits Context::sample_count()
 	{
 		if (max_samples == VK_SAMPLE_COUNT_1_BIT)
@@ -285,6 +305,10 @@ namespace nght::frg
 		if (!create_device())
 			return false;
 
+		if (!create_allocator()) /* allocator thingy; probably not required but
+				it's too difficult to make it optional instead of crashing lol */
+			return false;
+
 		return true;
 	}
 
@@ -326,8 +350,6 @@ namespace nght::frg
 		std::vector<VkPhysicalDevice> devices(device_count);
 		vkEnumeratePhysicalDevices(inst, &device_count, devices.data());
 
-		std::cerr << "Found " << device_count << " physical devices" << std::endl;
-
 		/* find a suitable device; preferring discrete GPUs because perf */
 		int64_t best_score = -1;
 
@@ -338,8 +360,6 @@ namespace nght::frg
 
 			vkGetPhysicalDeviceProperties(device, &device_props);
 			vkGetPhysicalDeviceFeatures(device, &device_features);
-
-			std::cerr << "Evaluating device: " << device_props.deviceName << std::endl;
 
 			/* calculate score; a simple algorithm for getting the best fit */
 			uint32_t score = 0;
@@ -472,24 +492,16 @@ namespace nght::frg
 		std::set<uint32_t> unique_queue_families;
 
 		if (has_flag(flags, ContextFlags::GRAPHICS))
-		{
 			unique_queue_families.insert(gp_queue_family);
-		}
 
 		if (has_flag(flags, ContextFlags::PRESENTATION))
-		{
 			unique_queue_families.insert(present_queue_family);
-		}
 
 		if (has_flag(flags, ContextFlags::COMPUTE))
-		{
 			unique_queue_families.insert(compute_queue_family);
-		}
 
 		if (has_flag(flags, ContextFlags::TRANSFER))
-		{
 			unique_queue_families.insert(transfer_queue_family);
-		}
 
 		/* create one queue from each family */
 		std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
@@ -549,7 +561,58 @@ namespace nght::frg
 		return true;
 	}
 
-	VkSampleCountFlagBits Context::get_max_samples()
+	bool Context::create_allocator()
+	{
+		VmaAllocatorCreateInfo alloc_info = {};
+
+		VkPhysicalDeviceProperties2 dev_prop2 = {};
+		dev_prop2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+
+		alloc_info.flags = 0;
+
+		if (std::ranges::find(dev_extensions, VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME)
+			!= dev_extensions.end())
+		{
+			alloc_info.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT;
+		}
+
+		if (std::ranges::find(dev_extensions, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME)
+			!= dev_extensions.end())
+		{
+			alloc_info.flags |= VMA_ALLOCATOR_CREATE_KHR_BIND_MEMORY2_BIT;
+		}
+
+		if (std::ranges::find(dev_extensions, VK_EXT_MEMORY_BUDGET_EXTENSION_NAME)
+			!= dev_extensions.end())
+		{
+			alloc_info.flags |= VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+		}
+
+		if (std::ranges::find(dev_extensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME)
+			!= dev_extensions.end())
+		{
+			alloc_info.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+		}
+
+		alloc_info.physicalDevice = phys_device;
+		alloc_info.device = dev;
+		alloc_info.instance = inst;
+		alloc_info.vulkanApiVersion = VK_API_VERSION_1_2; /* @NOTE: subject to change */
+
+		VmaVulkanFunctions vkfn = {};
+		vkfn.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+		vkfn.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+		alloc_info.pVulkanFunctions = &vkfn;
+
+		if (VkResult res = vmaCreateAllocator(&alloc_info, &alloc);
+			res != VK_SUCCESS)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	VkSampleCountFlagBits Context::get_max_samples() const
 	{
 		VkPhysicalDeviceProperties props;
 		vkGetPhysicalDeviceProperties(phys_device, &props);

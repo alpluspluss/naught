@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <vkma/vkma.hpp>
 #include <vulkan/vulkan.h>
 
 namespace nght::frg
@@ -83,6 +84,8 @@ namespace nght::frg
 
       [[nodiscard]] bool validation() const;
 
+      [[nodiscard]] VmaAllocator allocator() const;
+
    private:
       bool init(const ContextCreateInfo &info);
 
@@ -92,13 +95,16 @@ namespace nght::frg
 
       bool create_device();
 
-      VkSampleCountFlagBits get_max_samples();
+      bool create_allocator();
+
+      [[nodiscard]] VkSampleCountFlagBits get_max_samples() const;
 
       /* vkobjects */
       VkInstance inst = VK_NULL_HANDLE;
       VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
       VkPhysicalDevice phys_device = VK_NULL_HANDLE;
       VkDevice dev = VK_NULL_HANDLE;
+      VmaAllocator alloc;
 
       /* queue handles */
       VkQueue graphics_queue = VK_NULL_HANDLE;

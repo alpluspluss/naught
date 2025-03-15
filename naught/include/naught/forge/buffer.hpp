@@ -11,15 +11,15 @@ namespace nght::frg
 	{
 		CPU_TO_GPU,  /* staging buffer with CPU access */
 		GPU_ONLY     /* dev local memory */
-	};
+	 };
 
 	class Buffer
 	{
 	public:
 		Buffer(Context& ctx,
-			   VkDeviceSize size,
-			   VkBufferUsageFlags usage,
-			   BufUsage mem_usage = BufUsage::GPU_ONLY);
+			  VkDeviceSize size,
+			  VkBufferUsageFlags usage,
+			  BufUsage mem_usage = BufUsage::GPU_ONLY);
 		~Buffer();
 
 		/* non-copyable */
@@ -39,11 +39,14 @@ namespace nght::frg
 
 	private:
 		VkBuffer buf = VK_NULL_HANDLE;
-		VkDeviceMemory mem = VK_NULL_HANDLE;
+		VmaAllocation allocation = VK_NULL_HANDLE;
 		VkDevice dev = VK_NULL_HANDLE;
+		Context& ctx_ref; /* reference to the context that owns the allocator;
+			cuz we need to alloc without having fn call overhead */
 
 		VkDeviceSize buf_size = 0;
 		BufUsage usage = BufUsage::GPU_ONLY;
 		bool is_mapped = false;
+		void* mapped_ptr = nullptr;
 	};
 }

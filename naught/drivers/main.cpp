@@ -1,12 +1,21 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
 #include <iostream>
+#include <naught/forge/buffer.hpp>
 #include <naught/forge/context.hpp>
 #include <naught/forge/surface.hpp>
+#include <naught/forge/ib.hpp>
+#include <naught/forge/vb.hpp>
 #include <naught/forge/swapchain.hpp>
 #include <naught/host/app.hpp>
 #include <naught/host/input.hpp>
 #include <naught/host/window.hpp>
+
+struct Vertex
+{
+    float position[3];  // 3D position (x, y, z)
+    float color[3];     // RGB color
+};
 
 int main()
 {
@@ -61,6 +70,68 @@ int main()
                  << swapchain.extent().height << std::endl;
         std::cout << "swapchain images: " << swapchain.images().size() << std::endl;
         std::cout << "swapchain image views: " << swapchain.views().size() << std::endl;
+
+        constexpr VkDeviceSize buf_size = 128;
+        nght::frg::Buffer cpu_buffer(
+            context,
+            buf_size,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            nght::frg::BufUsage::CPU_TO_GPU
+        );
+        std::cout << "CPU buffer created: " << cpu_buffer.handle() << std::endl;
+
+        constexpr float test_data[16] = { 0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f,
+                               8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f };
+        cpu_buffer.upload(test_data, sizeof(test_data));
+
+        const auto mapped_data = static_cast<float *>(cpu_buffer.map());
+        std::cout << "first values: " << mapped_data[0] << ", "
+                  << mapped_data[1] << ", " << mapped_data[2] << std::endl;
+        cpu_buffer.unmap();
+
+        /* device local */
+        nght::frg::Buffer gpu_buffer(
+            context,
+            buf_size,
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            nght::frg::BufUsage::GPU_ONLY
+        );
+
+        std::cout << "GPU buffer created: " << gpu_buffer.handle() << std::endl;
+
+        constexpr Vertex triangle_verts[] = {
+            {{ 0.0f,  0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+            {{-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+            {{ 0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+        };
+
+        constexpr VkDeviceSize vertex_buffer_size = sizeof(triangle_verts);
+        nght::frg::VertexBuf vertex_buffer(
+            context,
+            vertex_buffer_size,
+            nght::frg::BufUsage::CPU_TO_GPU  /* using CPU_TO_GPU for this demo to directly upload */
+        );
+
+        vertex_buffer.upload(triangle_verts, vertex_buffer_size);
+        std::cout << "VertexBuf created: " << vertex_buffer.handle() << std::endl;
+
+        /* quad triangle */
+        constexpr uint32_t quad_indices[] = {
+            0, 1, 2,
+            0, 2, 3
+        };
+
+        constexpr VkDeviceSize index_buffer_size = sizeof(quad_indices);
+        nght::frg::IndexBuf index_buffer(
+            context,
+            index_buffer_size,
+            nght::frg::BufUsage::CPU_TO_GPU
+        );
+
+        index_buffer.upload(quad_indices, index_buffer_size);
+        index_buffer.set_count(6); /* 6 / 3 = 2 triangles */
+        std::cout << "IndexBuf created: " << index_buffer.handle() << std::endl;
+        std::cout << "IndexBuf count: " << index_buffer.count() << std::endl;
 
         window->on_resize = [&swapchain, window]()
         {
