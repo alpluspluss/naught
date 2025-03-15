@@ -355,13 +355,7 @@ static void BM_HeavyQueryWorkload(benchmark::State& state)
             /* named entities query */
             auto q4 = world.query<Name, Position>();
             for (auto& [entity, name, pos] : q4)
-            {
-                /* instead of modifying the string, just measure position */
-                if (pos->x > 1000.0f)
-                    (pos->x);
-
                 entities_processed++;
-            }
 
             /* complex query - fully featured entities */
             auto q5 = world.query<Position, Velocity, Health, AI>();

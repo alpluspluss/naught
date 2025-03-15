@@ -10,6 +10,8 @@ option(NECS_BUILD_BENCHES "Naught Build Benches " ON)
 # engine
 option(NAUGHT_BUILD_TESTS "Naught Build Tests" OFF)
 
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(naught)
