@@ -348,6 +348,10 @@ namespace nght
     {
         pimpl = std::make_unique<Impl>(name, style, bounds);
         pimpl->setup_window(this);
+
+        create_view();
+        create_input();
+
         [NSApp activateIgnoringOtherApps:YES];
     }
 

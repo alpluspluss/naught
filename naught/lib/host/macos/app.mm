@@ -3,10 +3,17 @@
 #include <stdexcept>
 #include <AppKit/AppKit.h>
 #include <naught/host/app.hpp>
+#include <naught/host/view.hpp>
 
 namespace nght
 {
-    App::App() : running(false) 
+    App& App::get() 
+    {
+        static App instance;
+        return instance;
+    }
+
+    App::App() : running(false)
     {
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -20,7 +27,7 @@ namespace nght
             NSMenuItem* app_mn_item = [[NSMenuItem alloc] init];
             [menu_bar addItem:app_mn_item];
             [NSApp setMainMenu:menu_bar];
-            
+
             NSMenu* appmn = [[NSMenu alloc] init];
             NSString* quit_tt = [@"Quit " stringByAppendingString:ns_app_name];
             NSMenuItem* quit_mn_item = [[NSMenuItem alloc] initWithTitle:quit_tt
@@ -30,7 +37,7 @@ namespace nght
             [app_mn_item setSubmenu:appmn];
         }
     }
-    
+
     App::~App() = default;
 
     const std::string& App::name() const
@@ -38,12 +45,38 @@ namespace nght
         return app_name;
     }
 
+    NaughtWindow* App::window(const WindowConfig& config)
+    {
+        auto window = std::make_unique<NaughtWindow>(
+            config.title,
+            config.style,
+            config.bounds
+        );
+
+        if (!config.center)
+            window->position(config.position);
+
+        window->view()->clear(config.clear_color[0], config.clear_color[1], config.clear_color[2], config.clear_color[3]);
+
+        auto* window_ptr = window.get();
+        windows.push_back(std::move(window));
+
+        return window_ptr;
+    }
+
+    NaughtWindow* App::main_window() const
+    {
+        return windows.empty() ? nullptr : windows[0].get();
+    }
+
     void App::run()
     {
         running = true;
         [NSApp finishLaunching];
         [NSApp activateIgnoringOtherApps:YES];
-        [NSApp run];
+
+        if (!windows.empty())
+            [NSApp run];
     }
 
     void App::stop()

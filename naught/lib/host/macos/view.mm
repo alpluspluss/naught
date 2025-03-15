@@ -9,6 +9,7 @@
 #include <Metal/Metal.h>
 #include <QuartzCore/CAMetalLayer.h>
 #include <naught/host/view.hpp>
+#include <iostream>
 
 @interface NaughtMetalView : NSView
 @end
@@ -41,22 +42,22 @@ namespace nght
 
         MTLClearColor clear_color = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
 
-        Impl(void* window) : window_handle(window)
+        explicit Impl(void* window) : window_handle(window)
         {
             device = MTLCreateSystemDefaultDevice();
             if (!device)
                 throw std::runtime_error("metal is not supported on this device");
-            
+
             /* setup metal layer */
-            NSWindow* win = (__bridge NSWindow*)window_handle;
+            auto win = (__bridge NSWindow*)window_handle;
             view = win.contentView;
             if (!view)
                 throw std::runtime_error("window has no content view");
-            
+
             /* conf the layer */
             metal_layer = [CAMetalLayer layer];
             metal_layer.device = device;
-            metal_layer.pixelFormat = MTLPixelFormatABGR4Unorm;
+            metal_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
             metal_layer.framebufferOnly = YES;
             metal_layer.contentsScale = win.backingScaleFactor;
 
