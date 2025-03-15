@@ -21,12 +21,13 @@ namespace nght::frg
 	}
 
 	static VkResult create_debug_utils_messenger(
+		// ReSharper disable once CppParameterMayBeConst
 		VkInstance instance,
 		const VkDebugUtilsMessengerCreateInfoEXT *create_info,
 		const VkAllocationCallbacks *allocator,
 		VkDebugUtilsMessengerEXT *debug_messenger)
 	{
-		auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(
+		const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(
 			instance, "vkCreateDebugUtilsMessengerEXT"));
 		if (func != nullptr)
 			return func(instance, create_info, allocator, debug_messenger);
@@ -35,7 +36,9 @@ namespace nght::frg
 	}
 
 	static void destroy_debug_utils_messenger(
+		// ReSharper disable once CppParameterMayBeConst
 		VkInstance instance,
+		// ReSharper disable once CppParameterMayBeConst
 		VkDebugUtilsMessengerEXT debug_messenger,
 		const VkAllocationCallbacks *allocator)
 	{

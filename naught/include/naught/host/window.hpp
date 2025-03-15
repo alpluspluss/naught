@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include <string>
 #include <functional>
-#include <memory>
+#include <string>
 #include <naught/types.hpp>
 #include <naught/host/input.hpp>
+#include <naught/host/view.hpp>
 
 namespace nght
 {
@@ -25,9 +25,9 @@ namespace nght
             STANDARD = WITH_TITLE | CLOSABLE | MINIATURIZABLE | RESIZABLE
         };
 
-        NaughtWindow(const std::string& name, Style style = Style::STANDARD, const Rect& bounds = Rect(1920, 1080));
+        explicit NaughtWindow(const std::string& name, Style style = Style::STANDARD, const Rect& bounds = Rect(1920, 1080));
         
-        NaughtWindow(Style style = Style::STANDARD, const Rect& bounds = Rect(1920, 1080)) : NaughtWindow("", style, bounds) {}
+        explicit NaughtWindow(Style style = Style::STANDARD, const Rect& bounds = Rect(1920, 1080)) : NaughtWindow("", style, bounds) {}
 
         ~NaughtWindow();
 
@@ -42,12 +42,12 @@ namespace nght
         NaughtWindow& operator=(NaughtWindow&&) noexcept = default;
 
         /* render view layer */
-        View* view() const;
+        [[nodiscard]] View* view() const;
 
         View* create_view();
 
         /* input thingy idk */
-        Input* input() const;
+        [[nodiscard]] Input* input() const;
 
         Input* create_input();
 
@@ -60,7 +60,7 @@ namespace nght
 
         void position(const Vec2& p);
 
-        void* native_handle() const;
+        [[nodiscard]] void* native_handle() const;
 
         std::function<void()> on_close;
 

@@ -3,10 +3,10 @@
 #pragma once
 
 #include <vector>
-#include <vulkan/vulkan.h>
 #include <naught/types.hpp>
 #include <naught/forge/context.hpp>
 #include <naught/forge/surface.hpp>
+#include <vulkan/vulkan.h>
 
 namespace nght::frg
 {
@@ -27,7 +27,7 @@ namespace nght::frg
 		void resize(const Vec2& size);
 
 		[[nodiscard]] VkSwapchainKHR handle() const;
-		[[nodiscard]] VkExtent2D extent();
+		[[nodiscard]] VkExtent2D extent() const;
 		[[nodiscard]] VkFormat format() const;
 
 		[[nodiscard]] const std::vector<VkImage>& images() const;
@@ -37,9 +37,14 @@ namespace nght::frg
 		void create(const Vec2& size);
 		void cleanup();
 
+		static VkSurfaceFormatKHR choose_swap_surface_format(const std::vector<VkSurfaceFormatKHR>& available_formats);
+		static VkPresentModeKHR choose_swap_present_mode(const std::vector<VkPresentModeKHR>& available_present_modes);
+		static VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities, const Vec2& size);
+
 		VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 		VkDevice dev = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
+		VkPhysicalDevice phys_device = VK_NULL_HANDLE;
 
 		std::vector<VkImage> imgs;
 		std::vector<VkImageView> img_views;

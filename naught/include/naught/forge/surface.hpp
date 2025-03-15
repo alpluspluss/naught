@@ -21,7 +21,7 @@ namespace nght::frg
 		Surface(Surface&&) noexcept;
 		Surface& operator=(Surface&&) noexcept;
 
-		[[nodiscard]] VkSurfaceKHR handle() const { return surface; }
+		[[nodiscard]] VkSurfaceKHR handle() const;
 
 	private:
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
