@@ -5,10 +5,12 @@
 #include <forge/buf/ib.hpp>
 #include <forge/buf/ub.hpp>
 #include <forge/buf/vb.hpp>
+#include <forge/cmd/manager.hpp>
 #include <forge/dev/context.hpp>
 #include <forge/dev/surface.hpp>
+#include <forge/render/framebuffer.hpp>
+#include <forge/render/renderpass.hpp>
 #include <forge/swapchain/swapchain.hpp>
-#include <forge/cmd/manager.hpp>
 #include <forge/sync/fence.hpp>
 #include <naught/host/app.hpp>
 #include <naught/host/input.hpp>
@@ -64,6 +66,7 @@ int main()
 				<< VK_VERSION_MINOR(props.apiVersion) << "."
 				<< VK_VERSION_PATCH(props.apiVersion) << std::endl;
 
+		// Use the original queue family access methods
 		std::cout << "graphics queue family: " << context.gpq_family() << std::endl;
 		std::cout << "transfer queue family: " << context.transq_family() << std::endl;
 		std::cout << "compute queue family: " << context.compq_family() << std::endl;
@@ -87,6 +90,32 @@ int main()
 		std::cout << "swapchain images: " << swapchain.images().size() << std::endl;
 		std::cout << "swapchain image views: " << swapchain.views().size() << std::endl;
 
+		// Testing the new RenderPass and Framebuffer systems
+		std::cout << "\n--- New Render Systems Testing ---\n";
+
+		// Create a simple render pass with the swapchain format
+		auto render_pass = frg::RenderPass::create_simple(
+			context,
+			swapchain.format()
+		);
+		std::cout << "Simple render pass created: " << render_pass.handle() << std::endl;
+
+		// Create framebuffers for each swapchain image view
+		std::vector<frg::Framebuffer> framebuffers;
+		for (const auto& view : swapchain.views()) {
+			std::vector<VkImageView> attachments = { view };
+			framebuffers.emplace_back(
+				context,
+				render_pass,
+				attachments,
+				swapchain.extent().width,
+				swapchain.extent().height
+			);
+			std::cout << "Framebuffer created: " << framebuffers.back().handle() << std::endl;
+		}
+		std::cout << "Created " << framebuffers.size() << " framebuffers" << std::endl;
+
+		// Continuing with existing buffer tests
 		constexpr VkDeviceSize buf_size = 128;
 		frg::Buffer cpu_buffer(
 			context,
@@ -322,16 +351,34 @@ int main()
 
 		std::cout << "Command buffer system tests completed\n";
 
-		window->on_resize = [&swapchain, window]()
+		window->on_resize = [&swapchain, window, &render_pass, &framebuffers, &context]()
 		{
 			std::cout << "window resized to " << window->size().first << "x" << window->size().second << "\n";
 			const nght::Vec2 new_size = {
 				(window->size().first),
 				(window->size().second)
 			};
+
+			// First destroy old framebuffers
+			framebuffers.clear(); // This will call destructors
+
+			// Resize swapchain
 			swapchain.resize(new_size);
 			std::cout << "swapchain resized to " << swapchain.extent().width << "x"
 					<< swapchain.extent().height << std::endl;
+
+			// Recreate framebuffers with new size
+			for (const auto& view : swapchain.views()) {
+				std::vector<VkImageView> attachments = { view };
+				framebuffers.emplace_back(
+					context,
+					render_pass,
+					attachments,
+					swapchain.extent().width,
+					swapchain.extent().height
+				);
+			}
+			std::cout << "Recreated " << framebuffers.size() << " framebuffers\n";
 		};
 	}
 	catch (const std::exception &e)

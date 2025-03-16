@@ -94,7 +94,7 @@ namespace frg
 	                                             debug_messenger(other.debug_messenger),
 	                                             phys_device(other.phys_device),
 	                                             dev(other.dev),
-												 alloc(other.alloc),
+	                                             alloc(other.alloc),
 	                                             graphics_queue(other.graphics_queue),
 	                                             prsnt_queue(other.prsnt_queue),
 	                                             trsnf_queue(other.trsnf_queue),
@@ -445,37 +445,81 @@ namespace frg
 		std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(phys_device, &queue_family_count, queue_families.data());
 
-		/* find graphics, compute, and transfer queue families */
+		/* Reset all queue family indices to max uint32 */
+		gp_queue_family = UINT32_MAX;
+		compute_queue_family = UINT32_MAX;
+		transfer_queue_family = UINT32_MAX;
+		present_queue_family = UINT32_MAX;
+
+		/* first pass: find graphics queue family */
 		for (uint32_t i = 0; i < queue_family_count; i++)
 		{
 			if (queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			{
 				gp_queue_family = i;
-
-				/* if we don't find a dedicated compute queue; use the graphics queue */
+				/* init others with graphics queue as a fallback */
 				if (compute_queue_family == UINT32_MAX)
 					compute_queue_family = i;
-
-				/* if we don't find a dedicated transfer queue; use the graphics queue */
 				if (transfer_queue_family == UINT32_MAX)
 					transfer_queue_family = i;
-			}
+				if (present_queue_family == UINT32_MAX)
+					present_queue_family = i;
 
-			/* prefer a dedicated compute queue */
-			if (queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT &&
+				break; /* found graphics queue, exit loop */
+			}
+		}
+
+		/* second pass: look for dedicated compute queue */
+		auto dedicated_compute = false;
+		for (uint32_t i = 0; i < queue_family_count; i++)
+		{
+			if ((queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT) &&
 			    !(queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT))
 			{
 				compute_queue_family = i;
-			}
-
-			/* prefer a dedicated transfer queue */
-			if (queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT &&
-			    !(queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
-			    !(queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT))
-			{
-				transfer_queue_family = i;
+				dedicated_compute = true;
+				break; /* found dedicated compute queue */
 			}
 		}
+
+		/* third pass: look for dedicated transfer queue */
+		bool dedicated_transfer = false;
+		for (uint32_t i = 0; i < queue_family_count; i++)
+		{
+			if ((queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT) &&
+			    !(queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT))
+			{
+				/* if we found a compute-only queue earlier; find a transfer queue
+				   that isn't also the compute queue for better parallelism */
+				if (dedicated_compute && i == compute_queue_family)
+					continue;
+
+				transfer_queue_family = i;
+				dedicated_transfer = true;
+				break; /* Found dedicated transfer queue */
+			}
+		}
+
+		/* if no dedicated transfer was found above, but we need a separate one from compute */
+		if (!dedicated_transfer && dedicated_compute)
+		{
+			/* fallback to any queue with transfer capability */
+			for (uint32_t i = 0; i < queue_family_count; i++)
+			{
+				if ((queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT) &&
+				    i != compute_queue_family)
+				{
+					transfer_queue_family = i;
+					break;
+				}
+			}
+		}
+
+		// std::cerr << "queue family assignments:" << std::endl;
+		// std::cerr << "  graphics queue family: " << gp_queue_family << std::endl;
+		// std::cerr << "  compute queue family: " << compute_queue_family << std::endl;
+		// std::cerr << "  transfer queue family: " << transfer_queue_family << std::endl;
+		// std::cerr << "  present queue family: " << present_queue_family << std::endl;
 
 		/* if we found all required queue families */
 		if (has_flag(flags, ContextFlags::GRAPHICS) && gp_queue_family == UINT32_MAX)
@@ -486,9 +530,6 @@ namespace frg
 
 		if (has_flag(flags, ContextFlags::TRANSFER) && transfer_queue_family == UINT32_MAX)
 			return false;
-
-		/* use the graphics queue for presentation by default */
-		present_queue_family = gp_queue_family;
 
 		/* collect unique queue families */
 		std::set<uint32_t> unique_queue_families;
@@ -519,8 +560,7 @@ namespace frg
 			queue_create_infos.emplace_back(queue_create_info);
 		}
 
-		/* specify the device features we need */
-		VkPhysicalDeviceFeatures device_features {};
+		VkPhysicalDeviceFeatures device_features = {};
 		device_features.samplerAnisotropy = VK_TRUE;
 
 		/* create the logical device */
@@ -573,25 +613,25 @@ namespace frg
 		alloc_info.flags = 0;
 
 		if (std::ranges::find(dev_extensions, VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME)
-			!= dev_extensions.end())
+		    != dev_extensions.end())
 		{
 			alloc_info.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT;
 		}
 
 		if (std::ranges::find(dev_extensions, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME)
-			!= dev_extensions.end())
+		    != dev_extensions.end())
 		{
 			alloc_info.flags |= VMA_ALLOCATOR_CREATE_KHR_BIND_MEMORY2_BIT;
 		}
 
 		if (std::ranges::find(dev_extensions, VK_EXT_MEMORY_BUDGET_EXTENSION_NAME)
-			!= dev_extensions.end())
+		    != dev_extensions.end())
 		{
 			alloc_info.flags |= VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
 		}
 
 		if (std::ranges::find(dev_extensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME)
-			!= dev_extensions.end())
+		    != dev_extensions.end())
 		{
 			alloc_info.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 		}

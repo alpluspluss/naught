@@ -104,7 +104,7 @@ namespace frg
       VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
       VkPhysicalDevice phys_device = VK_NULL_HANDLE;
       VkDevice dev = VK_NULL_HANDLE;
-      VmaAllocator alloc;
+      VmaAllocator alloc{};
 
       /* queue handles */
       VkQueue graphics_queue = VK_NULL_HANDLE;

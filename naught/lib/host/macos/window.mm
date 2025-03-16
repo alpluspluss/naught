@@ -320,15 +320,25 @@ namespace nght
             view_ptr.reset();
             input_ptr.reset();
             
-            if (window)
+            if (delegate) 
             {
-                [window setDelegate:nil];
+                [window setDelegate:nil]; /* remove deleg from window */
+                [delegate release];
+                delegate = nil;
+            }
+            
+            if (content_view)
+            {
+                [content_view removeFromSuperview];
+                [content_view release];
+                content_view = nil;
+            }
+            
+            if (window) {
                 [window close];
                 [window release];
+                window = nil;
             }
-
-            if (delegate)
-                [delegate release];
         }
 
         void setup_window(NaughtWindow* window_ptr) 

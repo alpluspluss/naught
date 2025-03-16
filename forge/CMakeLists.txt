@@ -17,6 +17,7 @@ add_library(${PROJECT_NAME}
         lib/swapchain/swapchain.cpp
         lib/sync/barrier.cpp lib/sync/fence.cpp lib/sync/semaphore.cpp
         lib/cmd/buffer.cpp lib/cmd/manager.cpp lib/cmd/pool.cpp
+        lib/render/renderpass.cpp lib/render/framebuffer.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

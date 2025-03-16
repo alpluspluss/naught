@@ -69,7 +69,18 @@ namespace nght
                 throw std::runtime_error("failed to create metal command queue");
         }
 
-        ~Impl() = default; /* objc++ objects are automatically released by default */
+        ~Impl() /* have to do manual cleanup because memory leak */
+        {
+            if (cmdq != nil)
+            {
+                [cmdq release];
+                cmdq = nil;
+            }
+
+             metal_layer = nil;
+            device = nil;
+            view = nil;
+        }
     };
 
     View::View(void* window_handle) : pimpl(std::make_unique<Impl>(window_handle)), on_render(nullptr), on_resize(nullptr) {}
