@@ -1,8 +1,8 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
 #include <gtest/gtest.h>
-#include <necs/archetypes.hpp>
-#include <necs/world.hpp>
+#include <ncs/archetype/archetypes.hpp>
+#include <ncs/world/world.hpp>
 
 struct Position
 {
@@ -24,7 +24,7 @@ struct Tag {};
 class ArchetypeTest : public testing::Test
 {
 protected:
-	necs::World world;
+	ncs::World world;
 
 	void SetUp() override {}
 
@@ -33,9 +33,9 @@ protected:
 
 TEST_F(ArchetypeTest, ArchetypeCreation)
 {
-	std::vector<necs::Component> components = { 1, 2, 3 };
+	std::vector<ncs::Component> components = { 1, 2, 3 };
 
-	necs::Archetype *arch1 = world.create_archetype(components);
+	ncs::Archetype *arch1 = world.create_archetype(components);
 	ASSERT_NE(arch1, nullptr);
 
 	EXPECT_TRUE(arch1->has(1));
@@ -43,17 +43,17 @@ TEST_F(ArchetypeTest, ArchetypeCreation)
 	EXPECT_TRUE(arch1->has(3));
 	EXPECT_FALSE(arch1->has(4));
 
-	necs::Archetype *arch2 = world.find_archetype(components);
+	ncs::Archetype *arch2 = world.find_archetype(components);
 	ASSERT_NE(arch2, nullptr);
 	EXPECT_EQ(arch1, arch2);
 
-	std::vector<necs::Component> components2 = { 3, 1, 2 };
-	necs::Archetype *arch3 = world.find_archetype(components2);
+	std::vector<ncs::Component> components2 = { 3, 1, 2 };
+	ncs::Archetype *arch3 = world.find_archetype(components2);
 	ASSERT_NE(arch3, nullptr);
 	EXPECT_EQ(arch1, arch3);
 
-	std::vector<necs::Component> components3 = { 1, 2, 4 };
-	necs::Archetype *arch4 = world.find_archetype(components3);
+	std::vector<ncs::Component> components3 = { 1, 2, 4 };
+	ncs::Archetype *arch4 = world.find_archetype(components3);
 	EXPECT_EQ(arch4, nullptr); // Should not find this archetype yet
 
 	arch4 = world.create_archetype(components3);
@@ -63,12 +63,12 @@ TEST_F(ArchetypeTest, ArchetypeCreation)
 
 TEST_F(ArchetypeTest, EntityOperations)
 {
-	std::vector<necs::Component> components = { 1, 2 };
-	necs::Archetype *arch = world.create_archetype(components);
+	std::vector<ncs::Component> components = { 1, 2 };
+	ncs::Archetype *arch = world.create_archetype(components);
 
-	constexpr necs::Entity entity1 = 1;
-	constexpr necs::Entity entity2 = 2;
-	constexpr necs::Entity entity3 = 3;
+	constexpr ncs::Entity entity1 = 1;
+	constexpr ncs::Entity entity2 = 2;
+	constexpr ncs::Entity entity3 = 3;
 
 	size_t row1 = arch->append(entity1);
 	EXPECT_EQ(row1, 0);
@@ -100,40 +100,40 @@ TEST_F(ArchetypeTest, EntityOperations)
 
 TEST_F(ArchetypeTest, ArchetypeTransitions)
 {
-	std::vector<necs::Component> comps1 = { 1 };
-	necs::Archetype *source = world.create_archetype(comps1);
+	std::vector<ncs::Component> comps1 = { 1 };
+	ncs::Archetype *source = world.create_archetype(comps1);
 
-	necs::Archetype *dest_add = world.find_archetype_with(source, 2);
+	ncs::Archetype *dest_add = world.find_archetype_with(source, 2);
 	ASSERT_NE(dest_add, nullptr);
 	EXPECT_TRUE(dest_add->has(1));
 	EXPECT_TRUE(dest_add->has(2));
 
-	necs::Archetype *dest_add2 = world.find_archetype_with(source, 2);
+	ncs::Archetype *dest_add2 = world.find_archetype_with(source, 2);
 	EXPECT_EQ(dest_add, dest_add2);
 
-	const std::vector<necs::Component> comps2 = { 1, 2 };
+	const std::vector<ncs::Component> comps2 = { 1, 2 };
 	source = world.create_archetype(comps2);
 
-	necs::Archetype *dest_rem = world.find_archetype_without(source, 2);
+	ncs::Archetype *dest_rem = world.find_archetype_without(source, 2);
 	ASSERT_NE(dest_rem, nullptr);
 	EXPECT_TRUE(dest_rem->has(1));
 	EXPECT_FALSE(dest_rem->has(2));
 
-	const std::vector<necs::Component> single_comp = { 1 };
-	necs::Archetype *first_arch = world.find_archetype(single_comp);
+	const std::vector<ncs::Component> single_comp = { 1 };
+	ncs::Archetype *first_arch = world.find_archetype(single_comp);
 	EXPECT_EQ(dest_rem, first_arch);
 
-	necs::Archetype *dest_rem2 = world.find_archetype_without(source, 2);
+	ncs::Archetype *dest_rem2 = world.find_archetype_without(source, 2);
 	EXPECT_EQ(dest_rem, dest_rem2);
 }
 
 TEST_F(ArchetypeTest, ArchetypeMovement)
 {
-	const std::vector<necs::Component> comps1 = { 1, 2 };
-	std::vector<necs::Component> comps2 = { 1, 3 };
+	const std::vector<ncs::Component> comps1 = { 1, 2 };
+	std::vector<ncs::Component> comps2 = { 1, 3 };
 
-	necs::Archetype *source = world.create_archetype(comps1);
-	necs::Archetype *dest = world.create_archetype(comps2);
+	ncs::Archetype *source = world.create_archetype(comps1);
+	ncs::Archetype *dest = world.create_archetype(comps2);
 
 	constexpr auto size1 = sizeof(int);
 	constexpr auto size3 = sizeof(float);
@@ -148,7 +148,7 @@ TEST_F(ArchetypeTest, ArchetypeMovement)
 	dest->columns[3].size = size3;
 	dest->columns[3].resize(10);
 
-	constexpr necs::Entity entity = 1;
+	constexpr ncs::Entity entity = 1;
 	const size_t row = source->append(entity);
 
 	const auto data1 = static_cast<int *>(source->columns[1].get(row));
@@ -156,7 +156,7 @@ TEST_F(ArchetypeTest, ArchetypeMovement)
 	*data1 = 42;
 	*data2 = 99;
 
-	necs::Record record;
+	ncs::Record record;
 	record.archetype = source;
 	record.row = row;
 

@@ -2,7 +2,9 @@
 
 #pragma once
 
-namespace necs
+#include <ncs/types.hpp>
+
+namespace ncs
 {
 	struct Column
 	{

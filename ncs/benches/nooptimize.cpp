@@ -3,7 +3,7 @@
 #include <random>
 #include <string>
 #include <benchmark/benchmark.h>
-#include <necs/world.hpp>
+#include <ncs/world/world.hpp>
 
 struct Position
 {
@@ -44,9 +44,9 @@ static void BM_EntityCreation(benchmark::State &state)
 {
 	for (auto _: state)
 	{
-		necs::World world;
+		ncs::World world;
 		for (auto i = 0; i < state.range(0); ++i)
-			[[maybe_unused]] auto e = world.entity();
+			benchmark::DoNotOptimize(world.entity());
 	}
 }
 
@@ -56,7 +56,7 @@ static void BM_EntityWithComponents(benchmark::State &state)
 {
 	for (auto _: state)
 	{
-		necs::World world;
+		ncs::World world;
 		for (auto i = 0; i < state.range(0); ++i)
 		{
 			const auto entity = world.entity();
@@ -70,8 +70,8 @@ BENCHMARK(BM_EntityWithComponents)->Range(1 << 10, 1 << 16)->Unit(benchmark::kMi
 
 static void BM_ComponentAccess(benchmark::State &state)
 {
-	necs::World world;
-	std::vector<necs::Entity> entities;
+	ncs::World world;
+	std::vector<ncs::Entity> entities;
 
 	for (int i = 0; i < state.range(0); ++i)
 	{
@@ -95,6 +95,7 @@ static void BM_ComponentAccess(benchmark::State &state)
 				pos && vel)
 				sum += pos->x + vel->x;
 		}
+		benchmark::DoNotOptimize(sum);
 	}
 }
 
@@ -102,8 +103,8 @@ BENCHMARK(BM_ComponentAccess)->Range(1 << 10, 1 << 16)->Unit(benchmark::kMillise
 
 static void BM_ArchetypeTransitions(benchmark::State &state)
 {
-	necs::World world;
-	std::vector<necs::Entity> entities;
+	ncs::World world;
+	std::vector<ncs::Entity> entities;
 
 	for (int i = 0; i < state.range(0); ++i)
 	{
@@ -131,7 +132,7 @@ static void BM_ArchetypeTransitions(benchmark::State &state)
 		{
 			auto entity = world.entity();
 			world.set<Position>(entity, { static_cast<float>(i), static_cast<float>(i * 2), static_cast<float>(i * 3) });
-			entities.emplace_back(entity);
+			entities.push_back(entity);
 		}
 	}
 }
@@ -140,8 +141,8 @@ BENCHMARK(BM_ArchetypeTransitions)->Range(1 << 8, 1 << 14)->Unit(benchmark::kMil
 
 static void BM_EntityIteration(benchmark::State &state)
 {
-	necs::World world;
-	std::vector<necs::Entity> entities;
+	ncs::World world;
+	std::vector<ncs::Entity> entities;
 
 	for (auto i = 0; i < state.range(0); ++i)
 	{
@@ -184,8 +185,8 @@ static void BM_EntityLifecycle(benchmark::State &state)
 {
 	for (auto _: state)
 	{
-		necs::World world;
-		std::vector<necs::Entity> entities;
+		ncs::World world;
+		std::vector<ncs::Entity> entities;
 
 		for (auto i = 0; i < state.range(0); ++i)
 		{
@@ -209,8 +210,8 @@ BENCHMARK(BM_EntityLifecycle)->Range(1 << 10, 1 << 16)->Unit(benchmark::kMillise
 
 static void BM_QueryPerformance(benchmark::State& state)
 {
-    necs::World world;
-    std::vector<necs::Entity> entities;
+    ncs::World world;
+    std::vector<ncs::Entity> entities;
 
     /* create a world with different component combinations */
     for (auto i = 0; i < state.range(0); ++i)
@@ -236,27 +237,37 @@ static void BM_QueryPerformance(benchmark::State& state)
     for (auto _ : state)
     {
         /* query all different archetype combinations */
-        auto total_movement = 0.0f;
-        auto total_health = 0;
+        float total_movement = 0.0f;
+        int total_health = 0;
 
         /* position only entities */
         auto q1 = world.query<Position>();
+        benchmark::DoNotOptimize(q1);
 
         /* position+velocity entities (physics objects) */
         auto q2 = world.query<Position, Velocity>();
         for (auto& [entity, pos, vel] : q2)
+        {
             total_movement += pos->x + vel->y;
+        }
 
         /* entities with health (game characters) */
         auto q3 = world.query<Position, Health>();
         for (auto& [entity, pos, health] : q3)
+        {
             total_health += health->current;
+        }
 
         /* entities with names (important objects) */
         auto q4 = world.query<Position, Name>();
+        benchmark::DoNotOptimize(q4);
 
         /* fully featured entities */
         auto q5 = world.query<Position, Velocity, Health, Name>();
+        benchmark::DoNotOptimize(q5);
+
+        benchmark::DoNotOptimize(total_movement);
+        benchmark::DoNotOptimize(total_health);
     }
 }
 
@@ -267,11 +278,11 @@ static void BM_HeavyQueryWorkload(benchmark::State& state)
     /* each benchmark iteration should create a fresh world */
     for (auto _ : state)
     {
-        necs::World world;
+        ncs::World world;
 
         /* create a complex distribution of entity archetypes */
         const int entity_count = state.range(0);
-        std::vector<necs::Entity> entities(entity_count);
+        std::vector<ncs::Entity> entities(entity_count);
 
         /* create entities with randomized component combinations */
         std::mt19937 rng(42);
@@ -355,7 +366,13 @@ static void BM_HeavyQueryWorkload(benchmark::State& state)
             /* named entities query */
             auto q4 = world.query<Name, Position>();
             for (auto& [entity, name, pos] : q4)
+            {
+                /* instead of modifying the string, just measure position */
+                if (pos->x > 1000.0f)
+                    benchmark::DoNotOptimize(pos->x);
+
                 entities_processed++;
+            }
 
             /* complex query - fully featured entities */
             auto q5 = world.query<Position, Velocity, Health, AI>();
@@ -377,6 +394,10 @@ static void BM_HeavyQueryWorkload(benchmark::State& state)
                 entities_processed++;
             }
         }
+
+        benchmark::DoNotOptimize(physics_sum);
+        benchmark::DoNotOptimize(health_sum);
+        benchmark::DoNotOptimize(entities_processed);
 
         for (const auto entity : entities)
             world.despawn(entity);

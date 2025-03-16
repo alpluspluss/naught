@@ -2,7 +2,7 @@
 
 #include <unordered_set>
 #include <gtest/gtest.h>
-#include <necs/world.hpp>
+#include <ncs/world/world.hpp>
 
 class LifecycleTest : public testing::Test
 {
@@ -11,18 +11,18 @@ protected:
 
 	void TearDown() override {}
 
-	necs::World world;
+	ncs::World world;
 };
 
 TEST_F(LifecycleTest, single)
 {
-	const necs::Entity e = world.entity();
+	const ncs::Entity e = world.entity();
 	EXPECT_NO_THROW(e);
 }
 
 TEST_F(LifecycleTest, multiple)
 {
-	std::vector<necs::Entity> entities;
+	std::vector<ncs::Entity> entities;
 	entities.reserve(100);
 
 	for (auto i = 0; i < 100; ++i)
@@ -30,7 +30,7 @@ TEST_F(LifecycleTest, multiple)
 
 	std::unordered_set<uint64_t> unique_ids;
 	for (const auto entity : entities)
-		unique_ids.insert(necs::World::get_eid(entity));
+		unique_ids.insert(ncs::World::get_eid(entity));
 
 	EXPECT_EQ(unique_ids.size(), 100);
 }

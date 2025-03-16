@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-namespace necs
+namespace ncs
 {
 	using Component = uint16_t;
 	using Entity = uint64_t;

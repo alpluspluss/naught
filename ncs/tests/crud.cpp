@@ -1,7 +1,7 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
 #include <gtest/gtest.h>
-#include <necs/world.hpp>
+#include <ncs/world/world.hpp>
 
 struct Position
 {
@@ -48,8 +48,8 @@ struct Name
 class CRUDTest : public testing::Test
 {
 protected:
-	necs::World world;
-	necs::Entity entity = {};
+	ncs::World world;
+	ncs::Entity entity = {};
 
 	void SetUp() override
 	{
@@ -128,10 +128,10 @@ TEST_F(CRUDTest, ComponentHas)
 	world.set<Health>(entity, Health { 100 });
 	EXPECT_TRUE(world.has<Health>(entity));
 
-	const necs::Entity invalid_entity = necs::World::encode_entity(999999, 0);
+	const ncs::Entity invalid_entity = ncs::World::encode_entity(999999, 0);
 	EXPECT_FALSE(world.has<Position>(invalid_entity));
 
-	const necs::Entity entity2 = world.entity();
+	const ncs::Entity entity2 = world.entity();
 	world.set<Health>(entity2, Health { 50 });
 
 	EXPECT_TRUE(world.has<Health>(entity2));
@@ -186,7 +186,7 @@ TEST_F(CRUDTest, EntityLifecycle)
 	EXPECT_FALSE(world.has<Position>(entity));
 	EXPECT_FALSE(world.has<Health>(entity));
 
-	necs::Entity new_entity = world.entity();
+	ncs::Entity new_entity = world.entity();
 
 	world.set<Position>(new_entity, Position { 4.0f, 5.0f, 6.0f });
 
@@ -196,9 +196,9 @@ TEST_F(CRUDTest, EntityLifecycle)
 
 TEST_F(CRUDTest, MultipleEntities)
 {
-	const necs::Entity entity1 = entity; // Use the one from SetUp
-	const necs::Entity entity2 = world.entity();
-	const necs::Entity entity3 = world.entity();
+	const ncs::Entity entity1 = entity; // Use the one from SetUp
+	const ncs::Entity entity2 = world.entity();
+	const ncs::Entity entity3 = world.entity();
 
 	world.set<Position>(entity1, Position { 1.0f, 2.0f, 3.0f });
 	world.set<Velocity>(entity1, Velocity { 10.0f, 20.0f, 30.0f });
@@ -267,7 +267,7 @@ TEST_F(CRUDTest, NonTrivial)
 	world.remove<Name>(entity);
 	EXPECT_FALSE(world.has<Name>(entity));
 
-	const necs::Entity entity2 = world.entity();
+	const ncs::Entity entity2 = world.entity();
 	world.set<Name>(entity, Name("Entity1"));
 	world.set<Name>(entity2, Name("Entity2"));
 

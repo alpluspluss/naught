@@ -1,9 +1,9 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
 #include <memory>
-#include <necs/column.hpp>
+#include <ncs/storage/column.hpp>
 
-namespace necs
+namespace ncs
 {
 	Column::Column() = default;
 

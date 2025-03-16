@@ -1,9 +1,9 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <necs/utils.hpp>
-#include <necs/world.hpp>
+#include <ncs/base/utils.hpp>
+#include <ncs/world/world.hpp>
 
-namespace necs
+namespace ncs
 {
 	constexpr uint64_t ENTITY_MASK = 0x0000FFFFFFFFFFFF; /* 48 lower bits for entity id */
 	constexpr uint64_t GENERATION_SHIFT = 48; /* we need to shift 16 bits upper to accommodate the entity bits */

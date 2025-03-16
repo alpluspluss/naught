@@ -4,10 +4,10 @@
 
 #include <unordered_map>
 #include <vector>
-#include <necs/column.hpp>
-#include <necs/types.hpp>
+#include <ncs/types.hpp>
+#include <ncs/storage/column.hpp>
 
-namespace necs
+namespace ncs
 {
 	struct Column;
 	struct Archetype;

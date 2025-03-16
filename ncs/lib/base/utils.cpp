@@ -1,8 +1,8 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <necs/utils.hpp>
+#include <ncs/base/utils.hpp>
 
-namespace necs
+namespace ncs
 {
 	/* hash parameters */
 	constexpr auto FNV_PRIME = 1099511628211ULL;

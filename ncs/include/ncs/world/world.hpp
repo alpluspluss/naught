@@ -3,11 +3,11 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include <necs/archetypes.hpp>
-#include <necs/types.hpp>
-#include <necs/utils.hpp>
+#include <ncs/types.hpp>
+#include <ncs/archetype/archetypes.hpp>
+#include <ncs/base/utils.hpp>
 
-namespace necs
+namespace ncs
 {
 	class World
 	{

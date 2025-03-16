@@ -1,8 +1,8 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <necs/archetypes.hpp>
+#include <ncs/archetype/archetypes.hpp>
 
-namespace necs
+namespace ncs
 {
 	size_t Archetype::append(const Entity entity)
 	{

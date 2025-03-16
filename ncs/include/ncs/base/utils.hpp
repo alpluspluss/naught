@@ -3,9 +3,9 @@
 #pragma once
 
 #include <vector>
-#include <necs/types.hpp>
+#include <ncs/types.hpp>
 
-namespace necs
+namespace ncs
 {
 	uint64_t archash(const std::vector<Component>& components);
 }

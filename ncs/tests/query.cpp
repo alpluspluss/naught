@@ -1,7 +1,7 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
 #include <gtest/gtest.h>
-#include <necs/world.hpp>
+#include <ncs/world/world.hpp>
 
 struct Position
 {
@@ -44,7 +44,7 @@ struct Tag3 {};
 
 TEST(WorldTest, entity_count_iteration)
 {
-	necs::World world;
+	ncs::World world;
 
 	for (auto i = 0; i < 5; ++i)
 	{
@@ -59,7 +59,7 @@ TEST(WorldTest, entity_count_iteration)
 
 TEST(WorldTest, mixed_components)
 {
-	necs::World world;
+	ncs::World world;
 
 	const auto e1 = world.entity();
 	const auto e2 = world.entity();
@@ -94,7 +94,7 @@ TEST(WorldTest, mixed_components)
 
 TEST(WorldTest, component_data_access)
 {
-	necs::World world;
+	ncs::World world;
 
 	const auto entity = world.entity();
 	world.set<Position>(entity, Position { 1.0f, 2.0f, 3.0f });
@@ -114,7 +114,7 @@ TEST(WorldTest, component_data_access)
 
 TEST(WorldTest, query_after_modifications)
 {
-	necs::World world;
+	ncs::World world;
 
 	const auto e1 = world.entity();
 	const auto e2 = world.entity();
@@ -140,7 +140,7 @@ TEST(WorldTest, query_after_modifications)
 
 TEST(WorldTest, query_after_despawn)
 {
-	necs::World world;
+	ncs::World world;
 
 	const auto e1 = world.entity();
 	const auto e2 = world.entity();
@@ -164,8 +164,8 @@ TEST(WorldTest, query_after_despawn)
 
 TEST(WorldTest, query_same_archetype)
 {
-	necs::World world;
-	std::vector<necs::Entity> entities;
+	ncs::World world;
+	std::vector<ncs::Entity> entities;
 	for (auto i = 0; i < 10; ++i)
 	{
 		auto e = world.entity();
@@ -199,7 +199,7 @@ TEST(WorldTest, query_same_archetype)
 
 TEST(WorldTest, query_empty_archetypes)
 {
-	necs::World world;
+	ncs::World world;
 
 	/* create an entity; then despawn */
 	const auto e = world.entity();
@@ -214,10 +214,10 @@ TEST(WorldTest, query_empty_archetypes)
 
 TEST(WorldTest, modify_during_iteration)
 {
-	necs::World world;
+	ncs::World world;
 
 	/* create entity with pos */
-	std::vector<necs::Entity> entities;
+	std::vector<ncs::Entity> entities;
 	for (auto i = 0; i < 5; ++i)
 	{
 		auto e = world.entity();
@@ -237,7 +237,7 @@ TEST(WorldTest, modify_during_iteration)
 
 TEST(WorldTest, component_order_in_query)
 {
-	necs::World world;
+	ncs::World world;
 
 	auto e = world.entity();
 	world.set<Position>(e, Position { 1.0f, 2.0f, 3.0f });
@@ -261,7 +261,7 @@ TEST(WorldTest, component_order_in_query)
 
 TEST(WorldTest, multiple_archetypes)
 {
-	necs::World world;
+	ncs::World world;
 
 	/* different archetype with position */
 	for (auto i = 0; i < 5; ++i)
@@ -311,7 +311,7 @@ TEST(WorldTest, multiple_archetypes)
 
 TEST(WorldTest, large_query)
 {
-	necs::World world;
+	ncs::World world;
 	for (auto i = 0; i < 1000; ++i)
 	{
 		const auto e = world.entity();
