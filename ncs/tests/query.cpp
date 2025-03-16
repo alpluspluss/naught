@@ -42,7 +42,7 @@ struct Tag2 {};
 
 struct Tag3 {};
 
-TEST(WorldTest, entity_count_iteration)
+TEST(WorldTest, EntityCountIteration)
 {
 	ncs::World world;
 
@@ -57,7 +57,7 @@ TEST(WorldTest, entity_count_iteration)
 	EXPECT_EQ(q.size(), 5);
 }
 
-TEST(WorldTest, mixed_components)
+TEST(WorldTest, MixedComponents)
 {
 	ncs::World world;
 
@@ -92,7 +92,7 @@ TEST(WorldTest, mixed_components)
 	EXPECT_EQ(q4.size(), 1); /* only e4 */
 }
 
-TEST(WorldTest, component_data_access)
+TEST(WorldTest, ComponentDataAccess)
 {
 	ncs::World world;
 
@@ -112,7 +112,7 @@ TEST(WorldTest, component_data_access)
 	EXPECT_EQ(vel->z, 30.0f);
 }
 
-TEST(WorldTest, query_after_modifications)
+TEST(WorldTest, QueryAfterModification)
 {
 	ncs::World world;
 
@@ -138,7 +138,7 @@ TEST(WorldTest, query_after_modifications)
 	EXPECT_EQ(q3.size(), 1); /* only e2 */
 }
 
-TEST(WorldTest, query_after_despawn)
+TEST(WorldTest, QueryAfterDespawn)
 {
 	ncs::World world;
 
@@ -162,7 +162,7 @@ TEST(WorldTest, query_after_despawn)
 	EXPECT_EQ(pos->z, 6.0f);
 }
 
-TEST(WorldTest, query_same_archetype)
+TEST(WorldTest, QuerySameArchetype)
 {
 	ncs::World world;
 	std::vector<ncs::Entity> entities;
@@ -197,7 +197,7 @@ TEST(WorldTest, query_same_archetype)
 	EXPECT_EQ(q7.size(), 10);
 }
 
-TEST(WorldTest, query_empty_archetypes)
+TEST(WorldTest, QueryEmptyArchetype)
 {
 	ncs::World world;
 
@@ -212,7 +212,7 @@ TEST(WorldTest, query_empty_archetypes)
 	EXPECT_EQ(q.size(), 0);
 }
 
-TEST(WorldTest, modify_during_iteration)
+TEST(WorldTest, ModifyDuringIter)
 {
 	ncs::World world;
 
@@ -235,7 +235,7 @@ TEST(WorldTest, modify_during_iteration)
 	EXPECT_EQ(q.size(), 5);
 }
 
-TEST(WorldTest, component_order_in_query)
+TEST(WorldTest, ComponentOrderInQuery)
 {
 	ncs::World world;
 
@@ -259,7 +259,7 @@ TEST(WorldTest, component_order_in_query)
 	EXPECT_EQ(vel2->x, 10.0f);
 }
 
-TEST(WorldTest, multiple_archetypes)
+TEST(WorldTest, MultipleArchetype)
 {
 	ncs::World world;
 
@@ -309,7 +309,7 @@ TEST(WorldTest, multiple_archetypes)
 	EXPECT_EQ(q4.size(), 4);
 }
 
-TEST(WorldTest, large_query)
+TEST(WorldTest, LargeQuery)
 {
 	ncs::World world;
 	for (auto i = 0; i < 1000; ++i)

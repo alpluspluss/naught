@@ -5,6 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <forge/buf/buffer.hpp>
+#include <vulkan/vulkan.h>
 
 namespace frg
 {

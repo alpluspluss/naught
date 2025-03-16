@@ -14,13 +14,13 @@ protected:
 	ncs::World world;
 };
 
-TEST_F(LifecycleTest, single)
+TEST_F(LifecycleTest, Single)
 {
 	const ncs::Entity e = world.entity();
 	EXPECT_NO_THROW(e);
 }
 
-TEST_F(LifecycleTest, multiple)
+TEST_F(LifecycleTest, Multiple)
 {
 	std::vector<ncs::Entity> entities;
 	entities.reserve(100);
@@ -35,7 +35,7 @@ TEST_F(LifecycleTest, multiple)
 	EXPECT_EQ(unique_ids.size(), 100);
 }
 
-TEST_F(LifecycleTest, recyling)
+TEST_F(LifecycleTest, Recyling)
 {
 	const auto first = world.entity();
 	world.despawn(first);
@@ -46,7 +46,7 @@ TEST_F(LifecycleTest, recyling)
 	EXPECT_NE(world.get_egen(first), world.get_egen(recycled));
 }
 
-TEST_F(LifecycleTest, respawn)
+TEST_F(LifecycleTest, Respawn)
 {
 	const auto e1 = world.entity();
 	const auto e2 = world.entity();
