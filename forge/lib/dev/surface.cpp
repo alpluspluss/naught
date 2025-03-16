@@ -1,6 +1,6 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <naught/forge/surface.hpp>
+#include <forge/dev/surface.hpp>
 #if defined(__APPLE__)
 #include <vulkan/vulkan_metal.h>
 #elif defined(_WIN32)
@@ -10,7 +10,7 @@
 #include <vulkan/vulkan_xlib.h>
 #endif
 
-namespace nght::frg
+namespace frg
 {
 	Surface::Surface(const Context& ctx, void* window_handle) : instance(ctx.instance())
 	{

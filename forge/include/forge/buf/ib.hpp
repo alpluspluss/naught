@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include <naught/forge/buffer.hpp>
+#include <forge/buf/buffer.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	class IndexBuf : public Buffer
 	{

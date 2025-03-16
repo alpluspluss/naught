@@ -1,11 +1,11 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <naught/forge/swapchain.hpp>
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <forge/swapchain/swapchain.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	Swapchain::Swapchain(const Context &ctx, const Surface &surface, const Vec2 &size) : dev(ctx.device()),
 		surface(surface.handle()),

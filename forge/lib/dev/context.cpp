@@ -1,11 +1,11 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <stdexcept>
 #include <iostream>
 #include <set>
-#include <naught/forge/context.hpp>
+#include <stdexcept>
+#include <forge/dev/context.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT severity,
@@ -24,6 +24,7 @@ namespace nght::frg
 		// ReSharper disable once CppParameterMayBeConst
 		VkInstance instance,
 		const VkDebugUtilsMessengerCreateInfoEXT *create_info,
+		// ReSharper disable once CppDFAConstantParameter
 		const VkAllocationCallbacks *allocator,
 		VkDebugUtilsMessengerEXT *debug_messenger)
 	{
@@ -40,6 +41,7 @@ namespace nght::frg
 		VkInstance instance,
 		// ReSharper disable once CppParameterMayBeConst
 		VkDebugUtilsMessengerEXT debug_messenger,
+		// ReSharper disable once CppDFAConstantParameter
 		const VkAllocationCallbacks *allocator)
 	{
 		const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(

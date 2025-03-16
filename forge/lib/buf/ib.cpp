@@ -1,8 +1,8 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <naught/forge/ib.hpp>
+#include <forge/buf/ib.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	IndexBuf::IndexBuf(Context& ctx, VkDeviceSize size, BufUsage usage)
 		: Buffer(ctx,

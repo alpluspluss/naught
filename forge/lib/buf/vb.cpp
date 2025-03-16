@@ -1,8 +1,8 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <naught/forge/vb.hpp>
+#include <forge/buf/vb.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	VertexBuf::VertexBuf(Context& ctx, VkDeviceSize size, BufUsage usage)
 		: Buffer(ctx,

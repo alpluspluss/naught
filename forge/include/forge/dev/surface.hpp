@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <naught/forge/context.hpp>
+#include <forge/dev/context.hpp>
 #include <vulkan/vulkan.h>
 
-namespace nght::frg
+namespace frg
 {
 	class Surface
 	{

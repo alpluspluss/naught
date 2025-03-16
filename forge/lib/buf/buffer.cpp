@@ -1,15 +1,15 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <naught/forge/buffer.hpp>
-#include <stdexcept>
 #include <cstring>
+#include <stdexcept>
+#include <forge/buf/buffer.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	Buffer::Buffer(Context &ctx,
-	               VkDeviceSize size,
-	               VkBufferUsageFlags usage,
-	               BufUsage mem_usage) : ctx_ref(ctx), dev(ctx.device()), buf_size(size), usage(mem_usage)
+	               const VkDeviceSize size,
+	               const VkBufferUsageFlags usage,
+	               const BufUsage mem_usage) : dev(ctx.device()), ctx_ref(ctx), buf_size(size), usage(mem_usage)
 	{
 		VkBufferCreateInfo buffer_info = {};
 		buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

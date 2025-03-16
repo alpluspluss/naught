@@ -1,8 +1,8 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
-#include <naught/forge/ub.hpp>
+#include <forge/buf/ub.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	VkDeviceSize UniformBuf::get_alignment() const
 	{

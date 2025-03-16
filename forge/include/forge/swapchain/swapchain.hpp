@@ -3,12 +3,12 @@
 #pragma once
 
 #include <vector>
-#include <naught/types.hpp>
-#include <naught/forge/context.hpp>
-#include <naught/forge/surface.hpp>
+#include <forge/types.hpp>
+#include <forge/dev/context.hpp>
+#include <forge/dev/surface.hpp>
 #include <vulkan/vulkan.h>
 
-namespace nght::frg
+namespace frg
 {
 	class Swapchain
 	{

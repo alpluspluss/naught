@@ -7,7 +7,7 @@
 #include <vkma/vkma.hpp>
 #include <vulkan/vulkan.h>
 
-namespace nght::frg
+namespace frg
 {
    enum class ContextFlags
    {

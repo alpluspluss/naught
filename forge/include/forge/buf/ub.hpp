@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include <naught/forge/buffer.hpp>
 #include <cstring>
 #include <stdexcept>
+#include <forge/buf/buffer.hpp>
 
-namespace nght::frg
+namespace frg
 {
 	class UniformBuf : public Buffer
 	{
@@ -16,7 +16,7 @@ namespace nght::frg
 				  align_uniform_buffer_size(ctx, size),
 				  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				  BufUsage::CPU_TO_GPU), /* uniform buffers must be CPU accessible */
-		          alignment(get_min_uniform_alignment(ctx))
+				  alignment(get_min_uniform_alignment(ctx))
 		{
 		}
 
