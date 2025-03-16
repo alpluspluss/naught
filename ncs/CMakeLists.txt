@@ -56,7 +56,7 @@ if (NCS_BUILD_TESTS)
     )
 
     target_link_libraries(ncstest PRIVATE
-            ${CMAKE_PROJECT_NAME}
+            ${PROJECT_NAME}
             GTest::GTest
             GTest::Main
     )
@@ -79,7 +79,7 @@ if (NCS_BUILD_BENCHES)
     )
 
     target_link_libraries(ncsbm_noop PRIVATE
-            ${CMAKE_PROJECT_NAME}
+            ${PROJECT_NAME}
             benchmark::benchmark
     )
 
@@ -95,7 +95,7 @@ if (NCS_BUILD_BENCHES)
     )
 
     target_link_libraries(ncsbm PRIVATE
-            ${CMAKE_PROJECT_NAME}
+            ${PROJECT_NAME}
             benchmark::benchmark
     )
 
