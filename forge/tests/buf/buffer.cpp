@@ -46,16 +46,14 @@ TEST_F(BufferTest, BufferMoveOperations)
 	VkBuffer handle1 = buffer1.handle();
 	EXPECT_NE(handle1, VK_NULL_HANDLE);
 
-	// Move constructor
 	frg::Buffer buffer2(std::move(buffer1));
 	EXPECT_EQ(buffer2.handle(), handle1);
-	EXPECT_EQ(buffer1.handle(), VK_NULL_HANDLE); // Original should be invalidated
+	EXPECT_EQ(buffer1.handle(), VK_NULL_HANDLE);
 
-	// Move assignment
 	frg::Buffer buffer3(*ctx, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, frg::BufUsage::CPU_TO_GPU);
 	buffer3 = std::move(buffer2);
 	EXPECT_EQ(buffer3.handle(), handle1);
-	EXPECT_EQ(buffer2.handle(), VK_NULL_HANDLE); // Original should be invalidated
+	EXPECT_EQ(buffer2.handle(), VK_NULL_HANDLE);
 }
 
 TEST_F(BufferTest, BufferUploadAndMap)
@@ -63,16 +61,14 @@ TEST_F(BufferTest, BufferUploadAndMap)
 	constexpr VkDeviceSize buffer_size = 16;
 	frg::Buffer buffer(*ctx, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, frg::BufUsage::CPU_TO_GPU);
 
-	// Data to upload
-	const float test_data[4] = { 1.0f, 2.0f, 3.0f, 4.0f };
+	constexpr float test_data[4] = { 1.0f, 2.0f, 3.0f, 4.0f };
 	ASSERT_NO_THROW(buffer.upload(test_data, sizeof(test_data)));
 
-	// Map and verify
 	void *mapped_data = nullptr;
 	ASSERT_NO_THROW(mapped_data = buffer.map());
 	ASSERT_NE(mapped_data, nullptr);
 
-	float *float_data = static_cast<float *>(mapped_data);
+	auto float_data = static_cast<float *>(mapped_data);
 	EXPECT_FLOAT_EQ(float_data[0], 1.0f);
 	EXPECT_FLOAT_EQ(float_data[1], 2.0f);
 	EXPECT_FLOAT_EQ(float_data[2], 3.0f);
@@ -89,7 +85,7 @@ TEST_F(BufferTest, VertexBufferCreation)
 		frg::VertexBuf vbuffer(*ctx, buffer_size, frg::BufUsage::CPU_TO_GPU);
 		EXPECT_NE(vbuffer.handle(), VK_NULL_HANDLE);
 		EXPECT_EQ(vbuffer.size(), buffer_size);
-		});
+	});
 }
 
 TEST_F(BufferTest, IndexBufferCreation)
@@ -101,10 +97,9 @@ TEST_F(BufferTest, IndexBufferCreation)
 		EXPECT_NE(ibuffer.handle(), VK_NULL_HANDLE);
 		EXPECT_EQ(ibuffer.size(), buffer_size);
 
-		// Set and get index count
 		ibuffer.set_count(100);
 		EXPECT_EQ(ibuffer.count(), 100);
-		});
+	});
 }
 
 TEST_F(BufferTest, UniformBufferCreation)

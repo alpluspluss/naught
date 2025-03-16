@@ -1,5 +1,7 @@
 # this file is a part of Naught Engine which is under MIT license; see LICENSE for more info
 
+find_package(Vulkan REQUIRED)
+
 if (APPLE)
     list(APPEND NAUGHT_SOURCE
             lib/host/macos/window.mm
@@ -27,8 +29,6 @@ if (APPLE)
     )
 endif ()
 
-
-# driver
 add_executable(Naught
         drivers/main.cpp
 )
@@ -36,18 +36,15 @@ add_executable(Naught
 target_include_directories(Naught PRIVATE
         ${PROJECT_SOURCE_DIR}/forge/include
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        # ext deps
+
+        ${PROJECT_SOURCE_DIR}/forge/ext/vkma/include
+        ${Vulkan_INCLUDE_DIRS}
 )
 
 target_link_libraries(Naught PRIVATE
         forge
         ncs
         naught
+        vkma
+        Vulkan::Vulkan
 )
-
-if (VULKAN_FOUND)
-    target_link_libraries(Naught PRIVATE
-            Vulkan::Vulkan
-    )
-    target_include_directories(Naught PRIVATE ${Vulkan_INCLUDE_DIRS})
-endif ()

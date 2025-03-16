@@ -375,7 +375,7 @@ namespace frg
 #ifdef __APPLE__
 			if (!device_features.geometryShader)
 			{
-				std::cerr << "  - Warning: No geometry shader support" << std::endl;
+				std::cerr << "warning: No geometry shader support" << std::endl;
 			}
 #else
         if (!device_features.geometryShader)

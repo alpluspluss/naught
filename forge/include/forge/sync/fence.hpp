@@ -22,7 +22,7 @@ namespace frg
 		Fence& operator=(Fence&& other) noexcept;
 
 		VkResult wait(uint64_t timeout = UINT64_MAX) const;
-		VkResult reset() const;
+		VkResult reset();
 		[[nodiscard]] bool signaled() const;
 
 		[[nodiscard]] VkFence handle() const;

@@ -54,7 +54,8 @@ namespace frg
 		return vkWaitForFences(dev, 1, &fence, VK_TRUE, timeout);
 	}
 	
-	VkResult Fence::reset() const
+	// ReSharper disable once CppMemberFunctionMayBeConst
+	VkResult Fence::reset()
 	{
 		return vkResetFences(dev, 1, &fence);
 	}

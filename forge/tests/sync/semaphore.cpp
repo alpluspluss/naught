@@ -81,7 +81,7 @@ TEST_F(SemaphoreTest, TimelineSemaphoreSignalWait)
 	/* check the value was updated */
 	EXPECT_EQ(semaphore.get_value(), signal_value);
 
-	/* wait on the current value; which should return immediately
+	/* wait on the current value; which should return immediately */
 	EXPECT_EQ(semaphore.wait(signal_value, 0), VK_SUCCESS);
 
 	/* wait on a future value with 0 timeout should timeout */
@@ -96,16 +96,15 @@ TEST_F(SemaphoreTest, TimelineSemaphoreMoveOperations)
 	VkSemaphore handle1 = semaphore1.handle();
 	EXPECT_NE(handle1, VK_NULL_HANDLE);
 
-	// Move constructor
 	frg::TimelineSemaphore semaphore2(std::move(semaphore1));
 	EXPECT_EQ(semaphore2.handle(), handle1);
-	EXPECT_EQ(semaphore1.handle(), VK_NULL_HANDLE); // Original should be invalidated
+	EXPECT_EQ(semaphore1.handle(), VK_NULL_HANDLE);
 	EXPECT_EQ(semaphore2.get_value(), initial_value);
 
 	// Move assignment
 	frg::TimelineSemaphore semaphore3(*ctx, 0);
 	semaphore3 = std::move(semaphore2);
 	EXPECT_EQ(semaphore3.handle(), handle1);
-	EXPECT_EQ(semaphore2.handle(), VK_NULL_HANDLE); // Original should be invalidated
+	EXPECT_EQ(semaphore2.handle(), VK_NULL_HANDLE);
 	EXPECT_EQ(semaphore3.get_value(), initial_value);
 }
