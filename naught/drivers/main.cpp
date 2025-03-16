@@ -1,13 +1,13 @@
 /* this file is a part of Naught Engine which is under MIT license; see LICENSE for more info */
 
 #include <iostream>
-#include <naught/forge/buffer.hpp>
-#include <naught/forge/context.hpp>
-#include <naught/forge/ib.hpp>
-#include <naught/forge/surface.hpp>
-#include <naught/forge/swapchain.hpp>
-#include <naught/forge/ub.hpp>
-#include <naught/forge/vb.hpp>
+#include <forge/buf/buffer.hpp>
+#include <forge/buf/ib.hpp>
+#include <forge/buf/ub.hpp>
+#include <forge/buf/vb.hpp>
+#include <forge/dev/context.hpp>
+#include <forge/dev/surface.hpp>
+#include <forge/swapchain/swapchain.hpp>
 #include <naught/host/app.hpp>
 #include <naught/host/input.hpp>
 #include <naught/host/window.hpp>
@@ -37,11 +37,11 @@ int main()
 
     try
     {
-        nght::frg::ContextCreateInfo info;
+        frg::ContextCreateInfo info;
         info.app_name = "Naught";
-        info.flags = nght::frg::ContextFlags::DEFAULT;
+        info.flags = frg::ContextFlags::DEFAULT;
 
-        nght::frg::Context context(info);
+        frg::Context context(info);
 
         std::cout << "vulkan context created successfully!" << std::endl;
         std::cout << "using device: " << context.device() << std::endl;
@@ -64,12 +64,12 @@ int main()
         std::cout << "max MSAA samples: " << context.sample_count() << std::endl;
 
         void* native_window_handle = window->view()->native_layer();
-        const nght::frg::Surface surface(context, native_window_handle);
+        const frg::Surface surface(context, native_window_handle);
         std::cout << "surface created successfully! handle: " << surface.handle() << std::endl;
 
         const nght::Vec2 size = { (window->size().first),
                           (window->size().second) };
-        nght::frg::Swapchain swapchain(context, surface, size);
+        frg::Swapchain swapchain(context, surface, size);
 
         std::cout << "\nswapchain created successfully!" << std::endl;
         std::cout << "swapchain handle: " << swapchain.handle() << std::endl;
@@ -80,11 +80,11 @@ int main()
         std::cout << "swapchain image views: " << swapchain.views().size() << std::endl;
 
         constexpr VkDeviceSize buf_size = 128;
-        nght::frg::Buffer cpu_buffer(
+        frg::Buffer cpu_buffer(
             context,
             buf_size,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            nght::frg::BufUsage::CPU_TO_GPU
+            frg::BufUsage::CPU_TO_GPU
         );
         std::cout << "CPU buffer created: " << cpu_buffer.handle() << std::endl;
 
@@ -98,11 +98,11 @@ int main()
         cpu_buffer.unmap();
 
         /* device local */
-        nght::frg::Buffer gpu_buffer(
+        frg::Buffer gpu_buffer(
             context,
             buf_size,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            nght::frg::BufUsage::GPU_ONLY
+            frg::BufUsage::GPU_ONLY
         );
 
         std::cout << "GPU buffer created: " << gpu_buffer.handle() << std::endl;
@@ -114,10 +114,10 @@ int main()
         };
 
         constexpr VkDeviceSize vertex_buffer_size = sizeof(triangle_verts);
-        nght::frg::VertexBuf vertex_buffer(
+        frg::VertexBuf vertex_buffer(
             context,
             vertex_buffer_size,
-            nght::frg::BufUsage::CPU_TO_GPU  /* using CPU_TO_GPU for this demo to directly upload */
+            frg::BufUsage::CPU_TO_GPU  /* using CPU_TO_GPU for this demo to directly upload */
         );
 
         vertex_buffer.upload(triangle_verts, vertex_buffer_size);
@@ -130,10 +130,10 @@ int main()
         };
 
         constexpr VkDeviceSize index_buffer_size = sizeof(quad_indices);
-        nght::frg::IndexBuf index_buffer(
+        frg::IndexBuf index_buffer(
             context,
             index_buffer_size,
-            nght::frg::BufUsage::CPU_TO_GPU
+            frg::BufUsage::CPU_TO_GPU
         );
 
         index_buffer.upload(quad_indices, index_buffer_size);
@@ -142,7 +142,7 @@ int main()
         std::cout << "IndexBuf count: " << index_buffer.count() << std::endl;
 
         constexpr VkDeviceSize ubo_size = sizeof(MVP);
-        nght::frg::UniformBuf uniform_buffer(context, ubo_size);
+        frg::UniformBuf uniform_buffer(context, ubo_size);
 
         std::cout << "ubuf created: " << uniform_buffer.handle() << std::endl;
         std::cout << "req size: " << ubo_size << " bytes" << std::endl;
